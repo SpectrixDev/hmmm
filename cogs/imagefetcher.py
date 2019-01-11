@@ -49,8 +49,8 @@ async def getSub(self, ctx, sub):
                             else:
                                 accepted == True
                         if accepted:
-                            if (f"**{title}**" + '\n' + url) not in memeHistory:
-                                if title != "**hmmm**":
+                            if (title + '\n' + url) not in memeHistory:
+                                if title != "hmmm":
                                     memeHistory.append(title + '\n' + url)
                                 else:
                                     title = ''
