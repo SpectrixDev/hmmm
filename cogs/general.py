@@ -16,7 +16,7 @@ class General:
 
     @commands.command()
     async def help(self, ctx):
-        e = discord.Embed(color=discord.Color(value=0x36393e))
+        e = discord.Embed(color=discord.Color(value=0xc904e2))
         e.set_author(name="Command documentation")
         e.add_field(name="??hmmm", value="- Sends an oddly funny image, freshly stashed. You can also use **??hm, ??hmm, ??hmmmm for aliases.**\n")
         e.add_field(name="??cursed", value="- [**NSFW**] Sends you a cursed image. You never know what you're gonna get. Could be weird, dark, funny, or disgusting... **NSFW channel required.**\n")
