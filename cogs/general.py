@@ -47,5 +47,9 @@ class General:
             helpMsg = await ctx.send(f"**{ctx.author.mention} https://discord.gg/Kghqehz/**\n*Here's my official server!*")
         await helpMsg.add_reaction("🤔")
 
+    @commands.command()
+    async def invite(self, ctx):
+        await ctx.send("**https://discordapp.com/oauth2/authorize?client_id=532917889926299648&scope=bot&permissions=321600** Here's my invite!")
+
 def setup(bot):
     bot.add_cog(General(bot))
