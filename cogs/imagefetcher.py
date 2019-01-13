@@ -45,7 +45,6 @@ async def getSub(self, ctx, sub):
                                     accepted = True
                                 else:
                                     accepted = False
-                                    await ctx.send("**:no_entry: Oops! Couldn't send this image, it was marked nsfw. Mark this channel as nsfw to view nsfw messages.**")
                             else:
                                 accepted == True
                         if accepted:
