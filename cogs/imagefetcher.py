@@ -87,6 +87,11 @@ class imagefetcher:
     async def surrealmeme(self, ctx):
         async with ctx.channel.typing():
             await getSub(self, ctx, 'surrealmemes')
+    
+    @commands.command(aliases=['imsorryjon', 'imsorryjohn'])
+    async def surrealmeme(self, ctx):
+        async with ctx.channel.typing():
+            await getSub(self, ctx, 'imsorryjon')
 
 def setup(bot):
     bot.add_cog(imagefetcher(bot))
