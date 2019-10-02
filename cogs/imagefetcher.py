@@ -89,7 +89,7 @@ class imagefetcher:
             await getSub(self, ctx, 'surrealmemes')
     
     @commands.command(aliases=['imsorryjon', 'imsorryjohn'])
-    async def surrealmeme(self, ctx):
+    async def imsorryjon(self, ctx):
         async with ctx.channel.typing():
             await getSub(self, ctx, 'imsorryjon')
 
