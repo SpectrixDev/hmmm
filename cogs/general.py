@@ -1,14 +1,17 @@
-import discord, asyncio, random, time, datetime, json, aiohttp
+import asyncio
+import random
+import time
+
+import aiohttp
+import discord
+
+from datetime import datetime
 from discord.ext import commands
+
 
 class General:
     def __init__(self, bot):
         self.bot = bot
-
-    async def on_ready(self):
-        with open("databases/uptime.json", 'w+') as uptime:
-            json.dump({"uptimestats" : str(datetime.datetime.utcnow())}, uptime)
-        print("Uptime Posted!")
 
     @commands.command()
     async def ping(self, ctx):
@@ -30,27 +33,28 @@ class General:
 
     @commands.command()
     async def uptime(self, ctx):
-        file = open('databases/uptime.json', "r")
-        time = json.load(file)['uptimestats']
-        uptimeraw = datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")
-        uptime = datetime.datetime.utcnow() - uptimeraw
+        uptime = datetime.utcnow() - self.bot.uptime
         hours, remainder = divmod(int(uptime.total_seconds()), 3600)
         minutes, seconds = divmod(remainder, 60)
         days, hours = divmod(hours, 24)
         await ctx.send(f"{days}d, {hours}h, {minutes}m, {seconds}s")
 
+
+
     @commands.command(aliases=['support'])
     async def server(self, ctx):
         try:
             await ctx.author.send("**https://discord.gg/Kghqehz**\n*Here's my official server!*")
-            helpMsg = await ctx.send("**I sent you my server invite in your DMs :mailbox_with_mail:**")
+            message = await ctx.send("**I sent you my server invite in your DMs :mailbox_with_mail:**")
         except Exception:
-            helpMsg = await ctx.send(f"**{ctx.author.mention} https://discord.gg/Kghqehz/**\n*Here's my official server!*")
-        await helpMsg.add_reaction("🤔")
+            message = await ctx.send(f"**{ctx.author.mention} https://discord.gg/Kghqehz/**\n*Here's my official server!*")
+        await message.add_reaction("🤔")
 
     @commands.command()
     async def invite(self, ctx):
-        await ctx.send("**https://discordapp.com/oauth2/authorize?client_id=532917889926299648&scope=bot&permissions=321600** Here's my invite!")
+        url = discord.utils.oauth_url(self.bot.user.id, discord.Permissions(321600))
+        await ctx.send(f"**{url}** Here's my invite!")
+        
 
 def setup(bot):
     bot.add_cog(General(bot))

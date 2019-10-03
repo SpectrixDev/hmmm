@@ -43,6 +43,8 @@ class ErrorHandler:
             return await ctx.send("**:no_entry: This command can only be run in a NSFW channel, as the image could be weird, dark, funny, or __disgusting...__ I can't always stop the bad stuff.**")
         elif isinstance(error, commands.MissingPermissions):
             return await ctx.send("**:no_entry: You have insufficient permissions to run this command.")
+
+            
         print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
                 
