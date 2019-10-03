@@ -9,7 +9,7 @@ from datetime import datetime
 from discord.ext import commands
 
 
-class General:
+class General(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -54,7 +54,7 @@ class General:
     async def invite(self, ctx):
         url = discord.utils.oauth_url(self.bot.user.id, discord.Permissions(321600))
         await ctx.send(f"**{url}** Here's my invite!")
-        
+
 
 def setup(bot):
     bot.add_cog(General(bot))

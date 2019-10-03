@@ -1,5 +1,5 @@
 # why are you reading the stupid gitignore rather just star the repo smh
-*.txt
+
 *.json
 /databases
 /servers
