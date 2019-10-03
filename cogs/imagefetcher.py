@@ -1,97 +1,123 @@
-import discord, datetime, time, aiohttp, asyncio, random
-from discord.ext import commands
-from random import randint
-from random import choice
-from urllib.parse import quote_plus
+import asyncio
+import datetime
+import discord
+import logging
+import random
 from collections import deque
+from discord.ext import commands
 
 acceptableImageFormats = [".png",".jpg",".jpeg",".gif",".gifv",".webm",".mp4","imgur.com"]
 memeHistory = deque()
 
-async def getSub(self, ctx, sub):
-        """Get stuff from requested sub"""
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://www.reddit.com/r{sub}/hot.json?limit=100") as response:
-                request = await response.json()
+log = logging.getLogger(__name__)
 
-        attempts = 1
+async def getSub(*args, **kwargs):
+    pass
+
+
+class SubredditHandler:
+    def __init__(self, bot, maxlen: int=400):
+        self._items = {
+            # r/subreddit: deque()
+        }
+        self.maxlen = maxlen
+        self.bot = bot
+    
+
+    async def get_post(self, sub):
+        if not sub in self._items:
+            self._items.update({ sub : deque(maxlen=self.maxlen) })
+
+        attempts = 0
+                    
         while attempts < 5:
-            if 'error' in request:
-                print("failed request {}".format(attempts))
-                await asyncio.sleep(2)
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(f"https://www.reddit.com/r/{sub}/hot.json?limit=100") as response:
-                        request = await response.json()
-                attempts += 1
-            else:
-                index = 0
+            async with self.bot.session.get(f"https://www.reddit.com/r/{sub}/hot.json?limit=100") as resp:
+                if resp.status == 200:
+                    data = await resp.json()
 
-                for index, val in enumerate(request['data']['children']):
-                    if 'url' in val['data']:
-                        url = str(val['data']['url'])
-                        nsfw = val['data']['over_18']
-                        title = f"**{str(val['data']['title'])}**"
-                        pinned = val['data']['stickied']
-                        print(title)
-                        urlLower = url.lower()
-                        accepted = False
-                        for j, v, in enumerate(acceptableImageFormats): #check if it's an acceptable image
-                            if v in urlLower:
-                                accepted = True
-                            elif pinned == True:
-                                accepted = False
-                            elif nsfw == True:
-                                if ctx.channel.is_nsfw():
-                                    accepted = True
-                                else:
-                                    accepted = False
+                    result = {
+                        "is_nsfw" : True,
+                        "title" : None,
+                        "url" : None
+                    }
+                    for object in data['data']['children']:
+                        if 'url' in object['data'] and not any(x["url"] == object["data"]["url"] for x in self._items.get(sub, [])):
+                            if not any(object["data"]["url"].lower().endswith(x) for x in acceptableImageFormats):
+                                continue
+
+                            result["url"] = str(object['data']['url']) 
+                            result["nsfw"] = object['data']['over_18']
+
+                            log.debug( str(object['data']['title']))
+
+                            if str(object['data']['title']) == "hmmm":
+                                result["title"] = ""
                             else:
-                                accepted == True
-                        if accepted:
-                            if (title + '\n' + url) not in memeHistory:
-                                if title != "hmmm":
-                                    memeHistory.append(title + '\n' + url)
-                                else:
-                                    title = ''
-                                    memeHistory.append(title + '\n' + url)
+                                result["title"] = f"**{str(object['data']['title'])}**"
+                            self._items[sub].append(result)
+
+                            log.debug(result)
+                            return result
+
+
+                elif resp.status == 429:
+                    log.warning("Reddit has returned a 429'er")
+
+                    # if we already have some urls in the cache then we should use it!
+                    if self._items.get(sub) and len(self._items[sub]) > 1:
+                        return random.choice(self._items.get(sub))
+                    
+                    await asyncio.sleep(8)
+                
         
-                                if len(memeHistory) > 68: #limit size
-                                    memeHistory.popleft() #remove the oldest
-                                break #done with this loop, can send image
 
-                await ctx.send(memeHistory[len(memeHistory) - 1]) #send the last image
-                return
-        await ctx.send("_{}! ({})_".format(str(request['message']), str(request['error'])))
 
-class imagefetcher:
+class ImageFetcher(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.handler = SubredditHandler(self.bot)
 
     @commands.command(aliases=['hm', 'hmm', 'hmmmm', 'hmmmmm'])
     async def hmmm(self, ctx):
         async with ctx.channel.typing():
-            await getSub(self, ctx, 'hmmm')
+            sub = await self.handler.get_post("hmmm")
+            if sub["nsfw"] and not ctx.channel.is_nsfw():
+                raise commands.NSFWChannelRequired(ctx.channel)
+            else:
+                await ctx.send(f"{sub['title']}\n{sub['url']}")
     
-    @commands.is_nsfw()
     @commands.command(aliases=['cursedimage', 'cursedimages'])
     async def cursed(self, ctx):
-        async with ctx.channel.typing():
-            await getSub(self, ctx, 'cursedimages')
-    
+        sub = await self.handler.get_post("cursedimages")
+        if sub["nsfw"] and not ctx.channel.is_nsfw():
+            raise commands.NSFWChannelRequired(ctx.channel)
+        else:
+            await ctx.send(f"{sub['title']}\n{sub['url']}")
+
     @commands.command()
     async def ooer(self, ctx):
-        async with ctx.channel.typing():
-            await getSub(self, ctx, 'Ooer')
+        sub = await self.handler.get_post("Ooer")
+        if sub["nsfw"] and not ctx.channel.is_nsfw():
+            raise commands.NSFWChannelRequired(ctx.channel)
+        else:
+            await ctx.send(f"{sub['title']}\n{sub['url']}")
     
     @commands.command(aliases=['surreal', 'surrealmemes'])
     async def surrealmeme(self, ctx):
-        async with ctx.channel.typing():
-            await getSub(self, ctx, 'surrealmemes')
-    
+        sub = await self.handler.get_post("surrealmemes")
+        if sub["nsfw"] and not ctx.channel.is_nsfw():
+            raise commands.NSFWChannelRequired(ctx.channel)
+        else:
+            await ctx.send(f"{sub['title']}\n{sub['url']}")
+
     @commands.command(aliases=['imsorryjon', 'imsorryjohn'])
     async def imsorry(self, ctx):
-        async with ctx.channel.typing():
-            await getSub(self, ctx, 'imsorryjon')
+        sub = await self.handler.get_post("imsorryjon")
+        if sub["nsfw"] and not ctx.channel.is_nsfw():
+            raise commands.NSFWChannelRequired(ctx.channel)
+        else:
+            await ctx.send(f"{sub['title']}\n{sub['url']}")
+
 
 def setup(bot):
-    bot.add_cog(imagefetcher(bot))
+    bot.add_cog(ImageFetcher(bot))
