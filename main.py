@@ -99,22 +99,7 @@ class hmmm(commands.AutoShardedBot):
     async def is_owner(self, user):
         return user.id in self.owners or await super().is_owner(user)
 
-    async def on_guild_join(self, guild):
-        await self.update_activity()
-
-        if guild.system_channel:
-            embed = discord.Embed(color=discord.Color(value=0x36393e))
-            embed.set_author(name="Confused? You should be, this bot makes no sense. Take this, it might help:")
-            embed.add_field(name="Prefix", value="`??`, or **mention me.**")
-            embed.add_field(name="Command help", value="??help")
-            embed.add_field(name="Support Server", value="[Join, it's fun here](https://discord.gg/Kghqehz)")
-            embed.add_field(name="Upvote", value="[Click here](https://discordbots.org/bot/320590882187247617/vote)")
-            embed.set_thumbnail(url="https://styles.redditmedia.com/t5_2qq6z/styles/communityIcon_ybmhghdu9nj01.png")
-            embed.set_footer(text=f"Thanks to you, this monstrosity of a bot is now on {len(self.guilds)} servers!", icon_url="https://media.giphy.com/media/ruw1bRYN0IXNS/giphy.gif")
-            await guild.system_channel.send(content="**Hello World! Thanks for inviting me! :wave: **", embed=embed)
-
-    async def on_guild_remove(self, guild):
-        await self.update_activity()
+    
     
 
     async def logout(self):
