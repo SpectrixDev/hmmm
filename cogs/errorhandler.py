@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 G_MESSAGE = """
-COMMAND:    {ctx.command.qualified_name}
+COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id}   NAME: {ctx.author}
 CHANNEL:    ID: {ctx.channel.id}   NAME: {ctx.channel}
 GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count} 
