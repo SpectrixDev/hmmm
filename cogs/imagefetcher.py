@@ -11,8 +11,6 @@ memeHistory = deque()
 
 log = logging.getLogger(__name__)
 
-async def getSub(*args, **kwargs):
-    pass
 
 
 class SubredditHandler:
@@ -32,11 +30,12 @@ class SubredditHandler:
                     
         while attempts < 5:
             async with self.bot.session.get(f"https://www.reddit.com/r/{sub}/hot.json?limit=100") as resp:
+                data = await resp.json()
+                log.debug("{0.method} {0._url} {0.status}".format(resp))
                 if resp.status == 200:
-                    data = await resp.json()
 
                     result = {
-                        "is_nsfw" : True,
+                        "nsfw" : True,
                         "title" : None,
                         "url" : None
                     }
@@ -62,13 +61,15 @@ class SubredditHandler:
 
                 elif resp.status == 429:
                     log.warning("Reddit has returned a 429'er")
-
+                    log.warning(data)
                     # if we already have some urls in the cache then we should use it!
-                    if self._items.get(sub) and len(self._items[sub]) > 1:
+                    if self._items.get(sub) and len(self._items[sub]) > 0:
                         return random.choice(self._items.get(sub))
                     
                     await asyncio.sleep(8)
                 
+                attempts += 1
+        return {"nsfw" : False, "title" : "Error", "url" : "could not fetch url"}
         
 
 
