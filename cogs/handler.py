@@ -103,4 +103,4 @@ class EventHandler(commands.Cog):
         log.error(MESSAGE)
 
 def setup(bot):
-    bot.add_cog(Handler(bot))
+    bot.add_cog(EventHandler(bot))
