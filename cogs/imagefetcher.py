@@ -76,12 +76,11 @@ class SubredditHandler:
 class ImageFetcher(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.handler = SubredditHandler(self.bot)
 
     @commands.command(aliases=['hm', 'hmm', 'hmmmm', 'hmmmmm'])
     async def hmmm(self, ctx):
         async with ctx.channel.typing():
-            sub = await self.handler.get_post("hmmm")
+            sub = await self.bot.handler.get_post("hmmm")
             if sub["nsfw"] and not ctx.channel.is_nsfw():
                 raise commands.NSFWChannelRequired(ctx.channel)
             else:
@@ -89,7 +88,7 @@ class ImageFetcher(commands.Cog):
     
     @commands.command(aliases=['cursedimage', 'cursedimages'])
     async def cursed(self, ctx):
-        sub = await self.handler.get_post("cursedimages")
+        sub = await self.bot.handler.get_post("cursedimages")
         if sub["nsfw"] and not ctx.channel.is_nsfw():
             raise commands.NSFWChannelRequired(ctx.channel)
         else:
@@ -97,7 +96,7 @@ class ImageFetcher(commands.Cog):
 
     @commands.command()
     async def ooer(self, ctx):
-        sub = await self.handler.get_post("Ooer")
+        sub = await self.bot.handler.get_post("Ooer")
         if sub["nsfw"] and not ctx.channel.is_nsfw():
             raise commands.NSFWChannelRequired(ctx.channel)
         else:
@@ -105,7 +104,7 @@ class ImageFetcher(commands.Cog):
     
     @commands.command(aliases=['surreal', 'surrealmemes'])
     async def surrealmeme(self, ctx):
-        sub = await self.handler.get_post("surrealmemes")
+        sub = await self.bot.handler.get_post("surrealmemes")
         if sub["nsfw"] and not ctx.channel.is_nsfw():
             raise commands.NSFWChannelRequired(ctx.channel)
         else:
@@ -113,7 +112,7 @@ class ImageFetcher(commands.Cog):
 
     @commands.command(aliases=['imsorryjon', 'imsorryjohn'])
     async def imsorry(self, ctx):
-        sub = await self.handler.get_post("imsorryjon")
+        sub = await self.bot.handler.get_post("imsorryjon")
         if sub["nsfw"] and not ctx.channel.is_nsfw():
             raise commands.NSFWChannelRequired(ctx.channel)
         else:

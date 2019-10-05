@@ -19,12 +19,18 @@ AUTHOR:     ID: {ctx.author.id}   NAME: {ctx.author}
 CHANNEL:    ID: {ctx.channel.id}   NAME: {ctx.channel}
 GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count} 
 INVOCATION: {ctx.message.content}     
+ERROR:
+{error}
+
 """
 
 DM_MESSAGE = """
 COMMAND:    {ctx.command.qualified_name}
 AUTHOR:     ID: {ctx.author.id} NAME: {ctx.author}
 INVOCATION: {ctx.message.content}     
+
+ERROR: 
+{error}
 """
 
 class EventHandler(commands.Cog):
@@ -43,7 +49,7 @@ class EventHandler(commands.Cog):
             embed.add_field(name="Support Server", value="[Join, it's fun here](https://discord.gg/Kghqehz)")
             embed.add_field(name="Upvote", value="[Click here](https://discordbots.org/bot/320590882187247617/vote)")
             embed.set_thumbnail(url="https://styles.redditmedia.com/t5_2qq6z/styles/communityIcon_ybmhghdu9nj01.png")
-            embed.set_footer(text=f"Thanks to you, this monstrosity of a bot is now on {len(self.guilds)} servers!", icon_url="https://media.giphy.com/media/ruw1bRYN0IXNS/giphy.gif")
+            embed.set_footer(text=f"Thanks to you, this monstrosity of a bot is now on {len(self.bot.guilds)} servers!", icon_url="https://media.giphy.com/media/ruw1bRYN0IXNS/giphy.gif")
             await guild.system_channel.send(content="**Hello World! Thanks for inviting me! :wave: **", embed=embed)
 
     @Cog.listener()
@@ -92,11 +98,11 @@ class EventHandler(commands.Cog):
 
             
         if ctx.guild:
-            MESSAGE = G_MESSAGE.format(ctx=ctx)
+            MESSAGE = G_MESSAGE.format(ctx=ctx, error=error)
 
             
         else:
-            MESSAGE = DM_MESSAGE.format(ctx=ctx)
+            MESSAGE = DM_MESSAGE.format(ctx=ctx, error=error)
 
             
         

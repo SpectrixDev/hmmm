@@ -53,7 +53,7 @@ class General(commands.Cog):
     @commands.command()
     async def invite(self, ctx):
         url = discord.utils.oauth_url(self.bot.user.id, discord.Permissions(321600))
-        await ctx.send(f"**{url}** Here's my invite!")
+        await ctx.send(f"**<{url}>** Here's my invite!")
 
 
 def setup(bot):
