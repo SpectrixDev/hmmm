@@ -35,7 +35,7 @@ class ANSIFormatter(logging.Formatter):
         if r.levelname == "WARNING":
             r.levelname = "WARN"
         if r.levelname in self.codes:
-            r.msg = self.codes[r.levelname] + r.msg + self.codes["RESET"]
+            r.msg = self.codes[r.levelname] + str(r.msg) + self.codes["RESET"]
         
         return super().format(r)
 
