@@ -113,7 +113,7 @@ class hmmm(commands.AutoShardedBot):
             embed.set_footer(text=f"Thanks to you, this monstrosity of a bot is now on {len(self.guilds)} servers!", icon_url="https://media.giphy.com/media/ruw1bRYN0IXNS/giphy.gif")
             await guild.system_channel.send(content="**Hello World! Thanks for inviting me! :wave: **", embed=embed)
 
-    async def on_guild_remove(self):
+    async def on_guild_remove(self, guild):
         await self.update_activity()
     
 
