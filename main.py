@@ -34,11 +34,10 @@ class ANSIFormatter(logging.Formatter):
     def format(self, r):
         if r.levelname == "WARNING":
             r.levelname = "WARN"
-        message = super().format(r)
-        if not r.levelname in self.codes:
-            return message
-
-        return self.codes[r.levelname.upper()] + message + self.codes["RESET"]
+        if r.levelname in self.codes:
+            r.msg = self.codes[r.levelname] + r.msg + self.codes["RESET"]
+        
+        return super().format(r)
 
 
 handler = logging.StreamHandler()

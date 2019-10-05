@@ -9,6 +9,24 @@ from discord.ext.commands import Cog
 
 log = logging.getLogger(__name__)
 
+
+
+
+
+G_MESSAGE = """
+COMMAND:    {ctx.command.qualified_name}
+AUTHOR:     ID: {ctx.author.id}   NAME: {ctx.author}
+CHANNEL:    ID: {ctx.channel.id}   NAME: {ctx.channel}
+GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count} 
+INVOCATION: {ctx.message.content}     
+"""
+
+DM_MESSAGE = """
+COMMAND:    {ctx.command.qualified_name}
+AUTHOR:     ID: {ctx.author.id} NAME: {ctx.author}
+INVOCATION: {ctx.message.content}     
+"""
+
 class ErrorHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -58,7 +76,16 @@ class ErrorHandler(commands.Cog):
             return await ctx.send("**:no_entry: You have insufficient permissions to run this command.")
 
             
-        log.error(f"Exception in command {ctx.command}:\n{error}")
+        if ctx.guild:
+            MESSAGE = G_MESSAGE.format(ctx=ctx)
+
+            
+        else:
+            MESSAGE = DM_MESSAGE.format(ctx=ctx)
+
+            
+        
+        log.error(MESSAGE)
 
 def setup(bot):
     bot.add_cog(ErrorHandler(bot))
