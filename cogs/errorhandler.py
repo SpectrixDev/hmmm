@@ -56,10 +56,6 @@ class ErrorHandler(commands.Cog):
             except:
                 pass
 
-        elif isinstance(error, commands.BadArgument):
-            if ctx.command.qualified_name == 'tag list':
-                return await ctx.send('**:no_entry: I could not find that member. Please try again.**')
-
         elif isinstance(error, commands.BotMissingPermissions):
             return await ctx.send(f"**:no_entry: Oops, I need `{error.missing_perms[0].replace('_', ' ')}` permission to run this command**")
 
