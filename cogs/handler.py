@@ -21,16 +21,30 @@ GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.m
 INVOCATION: {ctx.message.content}     
 ERROR:
 {error}
-
 """
 
 DM_MESSAGE = """
-COMMAND:    {ctx.command.qualified_name}
+COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id} NAME: {ctx.author}
 INVOCATION: {ctx.message.content}     
 
 ERROR: 
 {error}
+"""
+
+COMMAND_MESSAGE = """
+COMMAND:    {ctx.command}
+AUTHOR:     ID: {ctx.author.id} NAME: {ctx.author}
+INVOCATION: {ctx.message.content}     
+"""
+
+
+G_COMMAND_MESSAGE = """
+COMMAND:    {ctx.command}
+AUTHOR:     ID: {ctx.author.id}   NAME: {ctx.author}
+CHANNEL:    ID: {ctx.channel.id}   NAME: {ctx.channel}
+GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count} 
+INVOCATION: {ctx.message.content}     
 """
 
 class EventHandler(commands.Cog):
@@ -56,6 +70,17 @@ class EventHandler(commands.Cog):
     async def on_guild_remove(self, guild):
         await self.bot.update_activity()
 
+
+
+    @Cog.listener()
+    async def on_command_completion(self, ctx):
+        if ctx.guild:
+            MESSAGE = G_COMMAND_MESSAGE.format(ctx=ctx)
+        else:
+            MESSAGE = COMMAND_MESSAGE.format(ctx=ctx)
+        
+        log.info(MESSAGE)
+        
 
     @Cog.listener()
     async def on_command_error(self, ctx, error):
