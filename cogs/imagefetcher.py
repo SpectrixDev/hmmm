@@ -76,6 +76,9 @@ class SubredditHandler:
                         data = {}
 
                     if resp.status == 200:
+                        if len(data["data"]["children"]) == 0:
+                            raise SubredditNotFound(subreddit, 404)
+                        
                         log.info(f"r/{subreddit}: generating objects")
 
                         if not self.cache.get(subreddit):
@@ -106,8 +109,6 @@ class SubredditHandler:
                             log.debug("exec1")
                             break
                     
-                    elif resp.status == 404:
-                        raise SubredditNotFound(subreddit, 404)
 
                     elif resp.status == 329:
                         log.warning(f"Reddit is ratelimiting us, reason: {resp.reason}, json?: {data}")
