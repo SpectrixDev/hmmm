@@ -64,10 +64,10 @@ class SubredditHandler:
     
 
     async def get_post(self, subreddit):
-        if self.cache.get(subreddit, set()) == set():
+        if self.cache.get(subreddit, []) == []:
             attempts = 0
             while attempts < 5:
-                async with self.bot.session.get(f"https://reddit.com/r/{subreddit}/hot.json?limit=200") as resp:
+                async with self.bot.session.get(f"https://reddit.com/r/{subreddit}/hot.json?limit=500") as resp:
                     log.info("{0.method} {0._url} {0.status} {0.reason}".format(resp))
                     
                     try:
@@ -79,12 +79,12 @@ class SubredditHandler:
                         log.info(f"r/{subreddit}: generating objects")
 
                         if not self.cache.get(subreddit):
-                            self.cache[subreddit] = set()
+                            self.cache[subreddit] = list()
 
                         for obj in data["data"]["children"]:
 
                             url = obj["data"].get("url")
-                            if url and any(url.endswith(x) for x in accepted_extensions) and not any(c.url == url for c in self.history.get(subreddit, set())):
+                            if url and any(url.endswith(x) for x in accepted_extensions) and not any(c.url == url for c in self.history.get(subreddit, [])):
                                 kls = Post(
                                     title=obj["data"]["title"],
                                     url=url,
@@ -93,11 +93,18 @@ class SubredditHandler:
                                 if kls.title == "hmmm":
                                     kls.title = ""
 
-                                self.cache[subreddit].add(kls)
+                                self.cache[subreddit].append(kls)
                                 log.info(f"r/{subreddit}: {kls}")
+                                log.info(self.cache[subreddit])
+                            
 
                         log.info(f"r/{subreddit}: refreshed cache")
-                        break
+                        if len(self.cache[subreddit]) == 0:
+                            log.debug("exec")
+                            return random.choice(self.history.get(subreddit))
+                        else:
+                            log.debug("exec1")
+                            break
                     
                     elif resp.status == 404:
                         raise SubredditNotFound(subreddit, 404)
@@ -113,13 +120,12 @@ class SubredditHandler:
                         raise UnhandledStatusCode(resp.status_code, resp._url, resp.reason)
         
 
-
+        log.info(self.cache[subreddit])
         val = self.cache[subreddit].pop()
         if not subreddit in self.history:
-            self.history.update({ subreddit : set([val]) })
+            self.history.update({ subreddit : [val] })
         else:
-            
-            self.history[subreddit].add(val)
+            self.history[subreddit].append(val)
 
         return val
 
