@@ -132,7 +132,7 @@ class SubredditHandler:
 class ImageFetcher(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.handler = SubredditHandler(self)
+        self.handler = SubredditHandler(self.bot)
 
     @commands.command(aliases=['hm', 'hmm', 'hmmmm', 'hmmmmm'])
     async def hmmm(self, ctx):
