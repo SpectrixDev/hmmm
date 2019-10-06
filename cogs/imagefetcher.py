@@ -64,7 +64,7 @@ class SubredditHandler:
     
 
     async def get_post(self, subreddit):
-        if self.cache.get(subreddit, {}) == {}:
+        if self.cache.get(subreddit, set()) == set():
             attempts = 0
             while attempts < 5:
                 async with self.bot.session.get(f"https://reddit.com/r/{subreddit}/hot.json?limit=200") as resp:
