@@ -5,7 +5,7 @@ import logging
 import random
 from collections import deque
 from discord.ext import commands
-from cogs.objects import UnhandledStatusCode, SubredditNotFound
+from cogs.objects import UnhandledStatusCode, SubredditNotFound, SubredditHandler
 
 log = logging.getLogger(__name__)
 
@@ -16,12 +16,13 @@ log = logging.getLogger(__name__)
 class ImageFetcher(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.handler = SubredditHandler(self)
 
     @commands.command(aliases=['hm', 'hmm', 'hmmmm', 'hmmmmm'])
     async def hmmm(self, ctx):
         async with ctx.channel.typing():
             try:
-                sub = await self.bot.handler.get_post("hmmm")
+                sub = await self.handler.get_post("hmmm")
             except UnhandledStatusCode as error:
                 log.error(error)
                 return await ctx.send(error)
@@ -37,7 +38,7 @@ class ImageFetcher(commands.Cog):
     @commands.command(aliases=['cursedimage', 'cursedimages'])
     async def cursed(self, ctx):
         try:
-            sub = await self.bot.handler.get_post("cursedimages")
+            sub = await self.handler.get_post("cursedimages")
         except UnhandledStatusCode as error:
             log.error(error)
             return await ctx.send(error)
@@ -50,7 +51,7 @@ class ImageFetcher(commands.Cog):
     @commands.command()
     async def ooer(self, ctx):
         try:
-            sub = await self.bot.handler.get_post("Ooer")
+            sub = await self.handler.get_post("Ooer")
         except UnhandledStatusCode as error:
             log.error(error)
 
@@ -64,7 +65,7 @@ class ImageFetcher(commands.Cog):
     @commands.command(aliases=['surreal', 'surrealmemes'])
     async def surrealmeme(self, ctx):
         try:
-            sub = await self.bot.handler.get_post("surrealmemes")
+            sub = await self.handler.get_post("surrealmemes")
         except UnhandledStatusCode as error:
             log.error(error)
             return await ctx.send(error)
@@ -77,7 +78,7 @@ class ImageFetcher(commands.Cog):
     @commands.command(aliases=['imsorryjon', 'imsorryjohn'])
     async def imsorry(self, ctx):
         try:
-            sub = await self.bot.handler.get_post("imsorryjon")
+            sub = await self.handler.get_post("imsorryjon")
         except UnhandledStatusCode as error:
             log.error(error)
             return await ctx.send(error)

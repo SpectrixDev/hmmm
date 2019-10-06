@@ -12,8 +12,6 @@ import pathlib
 import contextlib
 from discord.ext import commands
 from datetime import datetime
-from cogs.objects import SubredditHandler
-
 
 with open("databases/thesacredtexts.json") as f:
     config = json.load(f)
@@ -60,7 +58,6 @@ class hmmm(commands.AutoShardedBot):
         self.remove_command("help")
         self.owners = set(config.get("owners", {}))
         self.uptime = datetime.utcnow()
-        self.handler = SubredditHandler(self)
         
 
     async def update_activity(self):
