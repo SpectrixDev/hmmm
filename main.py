@@ -56,7 +56,7 @@ log.addHandler(handler)
 
 class hmmm(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=commands.when_mentioned_or(">"), case_insensitive=True)
+        super().__init__(command_prefix=commands.when_mentioned_or("??"), case_insensitive=True)
         self.remove_command("help")
         self.owners = set(config.get("owners", {}))
         self.uptime = datetime.utcnow()

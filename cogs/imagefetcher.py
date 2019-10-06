@@ -29,7 +29,10 @@ class ImageFetcher(commands.Cog):
             if sub.nsfw and not ctx.channel.is_nsfw():
                 raise commands.NSFWChannelRequired(ctx.channel)
             else:
-                await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
+                if len(sub.title) == 0:
+                    await ctx.send(sub.url)
+                else:
+                    await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
     
     @commands.command(aliases=['cursedimage', 'cursedimages'])
     async def cursed(self, ctx):
