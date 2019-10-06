@@ -12,7 +12,7 @@ import pathlib
 import contextlib
 from discord.ext import commands
 from datetime import datetime
-from cogs.imagefetcher import SubredditHandler
+from cogs.objects import SubredditHandler
 
 
 with open("databases/thesacredtexts.json") as f:
@@ -56,7 +56,7 @@ log.addHandler(handler)
 
 class hmmm(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=commands.when_mentioned_or("??"), case_insensitive=True)
+        super().__init__(command_prefix=commands.when_mentioned_or(">"), case_insensitive=True)
         self.remove_command("help")
         self.owners = set(config.get("owners", {}))
         self.uptime = datetime.utcnow()
@@ -138,6 +138,9 @@ class hmmm(commands.AutoShardedBot):
                 
                 except commands.ExtensionNotFound:
                     log.warning(f"Extension {ext} cannot be found")
+                
+                except commands.NoEntryPointError:
+                    log.warning(f"Extension {ext} has no setup function")
 
                     
                     
