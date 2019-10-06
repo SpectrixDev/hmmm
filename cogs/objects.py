@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import random
 
 log = logging.getLogger(__name__)
 accepted_extensions = [".png",".jpg",".jpeg",".gif",".gifv",".webm",".mp4","imgur.com"]
@@ -75,6 +76,7 @@ class SubredditHandler:
                             self.cache[subreddit] = set()
 
                         for obj in data["data"]["children"]:
+
                             url = obj["data"].get("url")
                             if url and any(url.endswith(x) for x in accepted_extensions) and not any(c.url == url for c in self.history.get(subreddit, set())):
                                 kls = Post(
@@ -95,8 +97,11 @@ class SubredditHandler:
                         raise SubredditNotFound(subreddit, 404)
 
                     elif resp.status == 329:
-                        log.warning(f"Reddit is ratelimiting us, reason: {resp.reason}, json?: {data}. backing off and retrying")
-                        await asyncio.sleep(5)
+                        log.warning(f"Reddit is ratelimiting us, reason: {resp.reason}, json?: {data}")
+                        if not self.history.get(subreddit):
+                            await asyncio.sleep(5)
+                        else:
+                            return random.choice(self.history[subreddit])
                     
                     else:
                         raise UnhandledStatusCode(resp.status_code, resp._url, resp.reason)
