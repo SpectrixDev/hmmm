@@ -77,8 +77,8 @@ class SubredditHandler:
 
                     if resp.status == 200:
                         if len(data["data"]["children"]) == 0:
-                            raise SubredditNotFound(subreddit, 404)
-                        
+                            raise SubredditNotFound(subreddit, resp.status)
+
                         log.info(f"r/{subreddit}: generating objects")
 
                         if not self.cache.get(subreddit):
