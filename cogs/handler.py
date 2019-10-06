@@ -116,7 +116,7 @@ class EventHandler(commands.Cog):
 
         elif isinstance(error, commands.NSFWChannelRequired):
             # https://discordpy.readthedocs.io/en/latest/ext/commands/api.html#discord.ext.commands.is_nsfw
-            return await ctx.send("**:no_entry: This command can only be run in a NSFW channel, as the image could be weird, dark, funny, or __disgusting...__ I can't always stop the bad stuff.**")
+            return await ctx.send("**:no_entry: This post can only be sent in a NSFW channel, as the image could be weird, dark, funny, or __disgusting...__ I can't always stop the bad stuff.**")
 
         elif isinstance(error, commands.MissingPermissions):
             return await ctx.send("**:no_entry: You have insufficient permissions to run this command.")
