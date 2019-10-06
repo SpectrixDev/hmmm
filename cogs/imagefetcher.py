@@ -3,7 +3,7 @@ import datetime
 import discord
 import logging
 import random
-from collections import deque
+from collections import Counter
 from discord.ext import commands
 
 
@@ -53,7 +53,7 @@ class Post:
 class SubredditHandler:
     def __init__(self, bot, maxlen: int=400):
         self.history = {
-            # subreddit: deque()
+            # subreddit: []
         }
         self.cache = {
             # subreddit : a cache of json objects from each HTTP Request.
@@ -62,6 +62,21 @@ class SubredditHandler:
         self.maxlen = maxlen
         self.bot = bot
     
+
+    def debug_stats(self):
+        data = {
+            "history" : Counter(),
+            "http_cache" : Counter()
+        }
+
+        for k, v in self.history.items():
+            data["history"][k] = len(v)
+        
+        
+        for k, v in self.cache.items():
+            data["http_cache"][k] = len(v)
+    
+        return data
 
     async def get_post(self, subreddit):
         if self.cache.get(subreddit, []) == []:
@@ -210,6 +225,28 @@ class ImageFetcher(commands.Cog):
             raise commands.NSFWChannelRequired(ctx.channel)
         else:
             await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
+        
+    
+
+    @commands.command(name="healthcheck", aliases=["dbgstats", "hc"])
+    async def debug_stats(self, ctx):
+        result = self.handler.debug_stats()
+        embed = discord.Embed(
+            title="\U0001f493 Cache stats",
+            color=discord.Color.dark_purple(),
+            description=str()
+        )
+
+        embed.description += f"History Cache: {len(result['history'])}\n"
+        for sub, count in result["history"].items():
+            embed.description += f"__**r/{sub}**__: {count}\n"
+        
+        
+        embed.description += f"\nHTTP Cache: {len(result['http_cache'])}\n"
+        for sub, count in result["http_cache"].items():
+            embed.description += f"__**r/{sub}**__: {count}\n"
+        
+        await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(ImageFetcher(bot))
