@@ -63,6 +63,7 @@ class SubredditHandler:
             attempts = 0
             while attempts < 5:
                 async with self.bot.session.get(f"https://reddit.com/r/{subreddit}/hot.json?limit=200") as resp:
+                    log.info("{0.method} {0._url} {0.status} {0.reason}".format(resp))
                     
                     try:
                         data = await resp.json()
