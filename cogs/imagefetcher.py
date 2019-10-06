@@ -6,69 +6,126 @@ import random
 from collections import deque
 from discord.ext import commands
 
-acceptableImageFormats = [".png",".jpg",".jpeg",".gif",".gifv",".webm",".mp4","imgur.com"]
-memeHistory = deque()
 
 log = logging.getLogger(__name__)
+accepted_extensions = [".png",".jpg",".jpeg",".gif",".gifv",".webm",".mp4","imgur.com"]
 
-async def getSub(*args, **kwargs):
-    pass
+
+class HmmException(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+
+class SubredditNotFound(HmmException):
+    def __init__(self, subreddit, status_code: int=404):
+        self.subreddit = subreddit
+        message = "Cannot find r/{0}, received {1} status code"
+        super().__init__(message.format(subreddit, status_code))
+
+class UnhandledStatusCode(HmmException):
+    def __init__(self, status_code: int, url: str, reason: str):
+        self.status_code = status_code
+        self.url = url
+        self.reason = reason
+
+        message = "Unhandled status code {0}, reason: {1}"
+        super().__init__(message.format(status_code, reason))
+
+class Post:
+    def __init__(self, title: str, url: str, is_nsfw: bool=False):
+        self.title = title
+        self.url = url
+        self.nsfw = is_nsfw
+    
+
+    def __repr__(self):
+        return "<Post title={0.title} is_nsfw={0.nsfw} url={0.url}>".format(self)
+    
+    def __str__(self):
+        return self.url
+    
+    def __bool__(self):
+        return self.nsfw
+    
 
 
 class SubredditHandler:
     def __init__(self, bot, maxlen: int=400):
-        self._items = {
-            # r/subreddit: deque()
+        self.history = {
+            # subreddit: deque()
         }
+        self.cache = {
+            # subreddit : a cache of json objects from each HTTP Request.
+        }
+        # a JSON object from a HTTP request, it will be changed frequently.
         self.maxlen = maxlen
         self.bot = bot
     
 
-    async def get_post(self, sub):
-        if not sub in self._items:
-            self._items.update({ sub : deque(maxlen=self.maxlen) })
-
-        attempts = 0
+    async def get_post(self, subreddit):
+        if self.cache.get(subreddit, {}) == {}:
+            attempts = 0
+            while attempts < 5:
+                async with self.bot.session.get(f"https://reddit.com/r/{subreddit}/hot.json?limit=200") as resp:
+                    log.info("{0.method} {0._url} {0.status} {0.reason}".format(resp))
                     
-        while attempts < 5:
-            async with self.bot.session.get(f"https://www.reddit.com/r/{sub}/hot.json?limit=100") as resp:
-                if resp.status == 200:
-                    data = await resp.json()
+                    try:
+                        data = await resp.json()
+                    except (ValueError, TypeError):
+                        data = {}
 
-                    result = {
-                        "is_nsfw" : True,
-                        "title" : None,
-                        "url" : None
-                    }
-                    for object in data['data']['children']:
-                        if 'url' in object['data'] and not any(x["url"] == object["data"]["url"] for x in self._items.get(sub, [])):
-                            if not any(object["data"]["url"].lower().endswith(x) for x in acceptableImageFormats):
-                                continue
+                    if resp.status == 200:
+                        log.info(f"r/{subreddit}: generating objects")
 
-                            result["url"] = str(object['data']['url']) 
-                            result["nsfw"] = object['data']['over_18']
+                        if not self.cache.get(subreddit):
+                            self.cache[subreddit] = set()
 
-                            log.debug( str(object['data']['title']))
+                        for obj in data["data"]["children"]:
 
-                            if str(object['data']['title']) == "hmmm":
-                                result["title"] = ""
-                            else:
-                                result["title"] = f"**{str(object['data']['title'])}**"
-                            self._items[sub].append(result)
+                            url = obj["data"].get("url")
+                            if url and any(url.endswith(x) for x in accepted_extensions) and not any(c.url == url for c in self.history.get(subreddit, set())):
+                                kls = Post(
+                                    title=obj["data"]["title"],
+                                    url=url,
+                                    is_nsfw=obj["data"]["over_18"]
+                                )
+                                if kls.title == "hmmm":
+                                    kls.title = ""
 
-                            log.debug(result)
-                            return result
+                                self.cache[subreddit].add(kls)
+                                log.info(f"r/{subreddit}: {kls}")
 
-
-                elif resp.status == 429:
-                    log.warning("Reddit has returned a 429'er")
-
-                    # if we already have some urls in the cache then we should use it!
-                    if self._items.get(sub) and len(self._items[sub]) > 1:
-                        return random.choice(self._items.get(sub))
+                        log.info(f"r/{subreddit}: refreshed cache")
+                        break
                     
-                    await asyncio.sleep(8)
-                
+                    elif resp.status == 404:
+                        raise SubredditNotFound(subreddit, 404)
+
+                    elif resp.status == 329:
+                        log.warning(f"Reddit is ratelimiting us, reason: {resp.reason}, json?: {data}")
+                        if not self.history.get(subreddit):
+                            await asyncio.sleep(5)
+                        else:
+                            return random.choice(self.history[subreddit])
+                    
+                    else:
+                        raise UnhandledStatusCode(resp.status_code, resp._url, resp.reason)
+        
+
+
+        val = self.cache[subreddit].pop()
+        if not subreddit in self.history:
+            self.history.update({ subreddit : set([val]) })
+        else:
+            
+            self.history[subreddit].add(val)
+
+        return val
+
+
+        
+        
         
 
 
@@ -80,44 +137,72 @@ class ImageFetcher(commands.Cog):
     @commands.command(aliases=['hm', 'hmm', 'hmmmm', 'hmmmmm'])
     async def hmmm(self, ctx):
         async with ctx.channel.typing():
-            sub = await self.handler.get_post("hmmm")
-            if sub["nsfw"] and not ctx.channel.is_nsfw():
+            try:
+                sub = await self.handler.get_post("hmmm")
+            except UnhandledStatusCode as error:
+                log.error(error)
+                return await ctx.send(error)
+
+            if sub.nsfw and not ctx.channel.is_nsfw():
                 raise commands.NSFWChannelRequired(ctx.channel)
             else:
-                await ctx.send(f"{sub['title']}\n{sub['url']}")
+                if len(sub.title) == 0:
+                    await ctx.send(sub.url)
+                else:
+                    await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
     
     @commands.command(aliases=['cursedimage', 'cursedimages'])
     async def cursed(self, ctx):
-        sub = await self.handler.get_post("cursedimages")
-        if sub["nsfw"] and not ctx.channel.is_nsfw():
+        try:
+            sub = await self.handler.get_post("cursedimages")
+        except UnhandledStatusCode as error:
+            log.error(error)
+            return await ctx.send(error)
+
+        if sub.nsfw and not ctx.channel.is_nsfw():
             raise commands.NSFWChannelRequired(ctx.channel)
         else:
-            await ctx.send(f"{sub['title']}\n{sub['url']}")
+            await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
 
     @commands.command()
     async def ooer(self, ctx):
-        sub = await self.handler.get_post("Ooer")
-        if sub["nsfw"] and not ctx.channel.is_nsfw():
+        try:
+            sub = await self.handler.get_post("Ooer")
+        except UnhandledStatusCode as error:
+            log.error(error)
+
+            return await ctx.send(error)
+
+        if sub.nsfw and not ctx.channel.is_nsfw():
             raise commands.NSFWChannelRequired(ctx.channel)
         else:
-            await ctx.send(f"{sub['title']}\n{sub['url']}")
-    
+            await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
+
     @commands.command(aliases=['surreal', 'surrealmemes'])
     async def surrealmeme(self, ctx):
-        sub = await self.handler.get_post("surrealmemes")
-        if sub["nsfw"] and not ctx.channel.is_nsfw():
+        try:
+            sub = await self.handler.get_post("surrealmemes")
+        except UnhandledStatusCode as error:
+            log.error(error)
+            return await ctx.send(error)
+
+        if sub.nsfw and not ctx.channel.is_nsfw():
             raise commands.NSFWChannelRequired(ctx.channel)
         else:
-            await ctx.send(f"{sub['title']}\n{sub['url']}")
+            await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
 
     @commands.command(aliases=['imsorryjon', 'imsorryjohn'])
     async def imsorry(self, ctx):
-        sub = await self.handler.get_post("imsorryjon")
-        if sub["nsfw"] and not ctx.channel.is_nsfw():
+        try:
+            sub = await self.handler.get_post("imsorryjon")
+        except UnhandledStatusCode as error:
+            log.error(error)
+            return await ctx.send(error)
+
+        if sub.nsfw and not ctx.channel.is_nsfw():
             raise commands.NSFWChannelRequired(ctx.channel)
         else:
-            await ctx.send(f"{sub['title']}\n{sub['url']}")
-
+            await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
 
 def setup(bot):
     bot.add_cog(ImageFetcher(bot))
