@@ -196,8 +196,12 @@ class ImageFetcher(commands.Cog):
     @commands.command(aliases=['imsorryjon', 'imsorryjohn'])
     async def imsorry(self, ctx):
         await self.send_sub(ctx, "imsorryjon")
+<<<<<<< HEAD
     
     
+=======
+
+>>>>>>> 6b025efecb24956d106d18a497a5c059a330578c
     @commands.command(name="healthcheck", aliases=["dbgstats", "hc"])
     async def debug_stats(self, ctx):
         result = self.handler.debug_stats()
