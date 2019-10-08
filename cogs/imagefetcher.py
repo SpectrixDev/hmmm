@@ -3,7 +3,7 @@ import datetime
 import discord
 import logging
 import random
-from collections import Counter
+from collections import Counter, deque
 from discord.ext import commands
 
 
@@ -51,7 +51,7 @@ class Post:
 
 
 class SubredditHandler:
-    def __init__(self, bot, maxlen: int=400):
+    def __init__(self, bot, maxlen: int=500):
         self.history = {
             # subreddit: []
         }
@@ -62,6 +62,8 @@ class SubredditHandler:
         self.maxlen = maxlen
         self.bot = bot
     
+
+        
 
     def debug_stats(self):
         data = {
@@ -76,14 +78,15 @@ class SubredditHandler:
         for k, v in self.cache.items():
             data["http_cache"][k] = len(v)
     
-        return data
+        return data   
+
 
     async def get_post(self, subreddit):
         if self.cache.get(subreddit, []) == []:
             attempts = 0
             while attempts < 5:
-                async with self.bot.session.get(f"https://reddit.com/r/{subreddit}/hot.json?limit=500") as resp:
-                    log.info("{0.method} {0._url} {0.status} {0.reason}".format(resp))
+                async with self.bot.session.get(f"https://reddit.com/r/{subreddit}/new.json?sort=top&limit=300") as resp:
+                    log.debug("{0.method} {0._url} {0.status} {0.reason}".format(resp))
                     
                     try:
                         data = await resp.json()
@@ -94,7 +97,7 @@ class SubredditHandler:
                         if len(data["data"]["children"]) == 0:
                             raise SubredditNotFound(subreddit, resp.status)
 
-                        log.info(f"r/{subreddit}: generating objects")
+                        log.debug(f"r/{subreddit}: generating objects")
 
                         if not self.cache.get(subreddit):
                             self.cache[subreddit] = list()
@@ -112,11 +115,10 @@ class SubredditHandler:
                                     kls.title = ""
 
                                 self.cache[subreddit].append(kls)
-                                log.info(f"r/{subreddit}: {kls}")
-                                log.info(self.cache[subreddit])
+                                log.debug(f"r/{subreddit}: {kls}")
                             
 
-                        log.info(f"r/{subreddit}: refreshed cache")
+                        log.debug(f"r/{subreddit}: refreshed cache")
                         if len(self.cache[subreddit]) == 0:
                             log.debug("exec")
                             return random.choice(self.history.get(subreddit))
@@ -136,10 +138,10 @@ class SubredditHandler:
                         raise UnhandledStatusCode(resp.status_code, resp._url, resp.reason)
         
 
-        log.info(self.cache[subreddit])
         val = self.cache[subreddit].pop()
+        log.debug(f"fetched {val} from cache")
         if not subreddit in self.history:
-            self.history.update({ subreddit : [val] })
+            self.history.update({ subreddit : deque(maxlen=self.maxlen, iterable=[val]) })
         else:
             self.history[subreddit].append(val)
 
@@ -194,7 +196,8 @@ class ImageFetcher(commands.Cog):
     @commands.command(aliases=['imsorryjon', 'imsorryjohn'])
     async def imsorry(self, ctx):
         await self.send_sub(ctx, "imsorryjon")
-
+    
+    
     @commands.command(name="healthcheck", aliases=["dbgstats", "hc"])
     async def debug_stats(self, ctx):
         result = self.handler.debug_stats()
@@ -214,6 +217,8 @@ class ImageFetcher(commands.Cog):
             embed.description += f"__**r/{sub}**__: {count}\n"
         
         await ctx.send(embed=embed)
+
+  
 
 def setup(bot):
     bot.add_cog(ImageFetcher(bot))
