@@ -155,78 +155,45 @@ class ImageFetcher(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.handler = SubredditHandler(self.bot)
+    
+
+
+    async def send_sub(self, ctx, subreddit):
+        try:
+            sub = await self.handler.get_post(subreddit)
+        except UnhandledStatusCode as error:
+            log.error(error)
+            return await ctx.send(error)
+
+        if sub.nsfw and not ctx.channel.is_nsfw():
+            raise commands.NSFWChannelRequired(ctx.channel)
+        else:
+            if len(sub.title) == 0:
+                await ctx.send(sub.url)
+            else:
+                await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
+    
 
     @commands.command(aliases=['hm', 'hmm', 'hmmmm', 'hmmmmm'])
     async def hmmm(self, ctx):
         async with ctx.channel.typing():
-            try:
-                sub = await self.handler.get_post("hmmm")
-            except UnhandledStatusCode as error:
-                log.error(error)
-                return await ctx.send(error)
-
-            if sub.nsfw and not ctx.channel.is_nsfw():
-                raise commands.NSFWChannelRequired(ctx.channel)
-            else:
-                if len(sub.title) == 0:
-                    await ctx.send(sub.url)
-                else:
-                    await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
+            await self.send_sub(ctx, "hmmm")
     
     @commands.command(aliases=['cursedimage', 'cursedimages'])
     async def cursed(self, ctx):
-        try:
-            sub = await self.handler.get_post("cursedimages")
-        except UnhandledStatusCode as error:
-            log.error(error)
-            return await ctx.send(error)
-
-        if sub.nsfw and not ctx.channel.is_nsfw():
-            raise commands.NSFWChannelRequired(ctx.channel)
-        else:
-            await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
+        await self.send_sub(ctx, "cursedimages")
 
     @commands.command()
     async def ooer(self, ctx):
-        try:
-            sub = await self.handler.get_post("Ooer")
-        except UnhandledStatusCode as error:
-            log.error(error)
-
-            return await ctx.send(error)
-
-        if sub.nsfw and not ctx.channel.is_nsfw():
-            raise commands.NSFWChannelRequired(ctx.channel)
-        else:
-            await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
+        await self.send_sub(ctx, "Ooer")
 
     @commands.command(aliases=['surreal', 'surrealmemes'])
     async def surrealmeme(self, ctx):
-        try:
-            sub = await self.handler.get_post("surrealmemes")
-        except UnhandledStatusCode as error:
-            log.error(error)
-            return await ctx.send(error)
-
-        if sub.nsfw and not ctx.channel.is_nsfw():
-            raise commands.NSFWChannelRequired(ctx.channel)
-        else:
-            await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
+        await self.send_sub(ctx, "surrealmemes")
 
     @commands.command(aliases=['imsorryjon', 'imsorryjohn'])
     async def imsorry(self, ctx):
-        try:
-            sub = await self.handler.get_post("imsorryjon")
-        except UnhandledStatusCode as error:
-            log.error(error)
-            return await ctx.send(error)
-
-        if sub.nsfw and not ctx.channel.is_nsfw():
-            raise commands.NSFWChannelRequired(ctx.channel)
-        else:
-            await ctx.send(f"**{sub.title[:100]}**\n{sub.url}")
-        
-    
+        await self.send_sub(ctx, "imsorryjon")
 
     @commands.command(name="healthcheck", aliases=["dbgstats", "hc"])
     async def debug_stats(self, ctx):
