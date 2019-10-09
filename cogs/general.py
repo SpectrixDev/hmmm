@@ -26,7 +26,7 @@ class General(commands.Cog):
         e.add_field(name="??imsorryjon", value="- Sends images of innocent cartoon characters, usually Garfield, but with a dark twist. A **very**, dark twist...")
         e.add_field(name="??surrealmeme", value="- Sends a surreal meme. Surreal memes are memes that make no logical sense, and are somehow amusing.")
         e.add_field(name="??ooer", value="- Sends completely *n͘͞or҉͡ḿ́al̷͏ images* from a completely n̢̢͠o̢̢͡͞҉ŕ̴͘͟m̨҉̨a͢͞͏̀l̢̕͠͝ place...  ***l e m o n***")
-        e.add_field(name="Other commands", value="??ping, ??uptime, ??help, ??server, ??healthcheck")
+        e.add_field(name="Other commands", value="??ping, ??uptime, ??help, ??support, ??healthcheck")
         e.set_footer(text='"Much more coming soon. I think... but then again I question my sanity every time I write another line of code..." - Spectrix')
         e.set_thumbnail(url="https://styles.redditmedia.com/t5_2qq6z/styles/communityIcon_ybmhghdu9nj01.png")
         await ctx.send(embed=e)
@@ -37,7 +37,7 @@ class General(commands.Cog):
         hours, remainder = divmod(int(uptime.total_seconds()), 3600)
         minutes, seconds = divmod(remainder, 60)
         days, hours = divmod(hours, 24)
-        await ctx.send(f"{days}d, {hours}h, {minutes}m, {seconds}s")
+        await ctx.send(f"{days} days, {hours}hours, {minutes}minutes, and {seconds}s")
 
 
 

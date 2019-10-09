@@ -99,9 +99,6 @@ class hmmm(commands.AutoShardedBot):
     async def is_owner(self, user):
         return user.id in self.owners or await super().is_owner(user)
 
-    
-    
-
     async def logout(self):
         log.debug("logout() got called, logging out and cleaning up tasks")
         try:
@@ -110,7 +107,7 @@ class hmmm(commands.AutoShardedBot):
             #TODO: find what exception is raised when the session was already closed
             pass
 
-        await super().logout()
+        return await super().logout()
 
     def run(self):
         extensions = [x.as_posix().replace("/", ".") for x in pathlib.Path("cogs").iterdir() if x.is_file() and x.name.endswith(".py")]
@@ -144,9 +141,15 @@ class hmmm(commands.AutoShardedBot):
 
             super().run(config['tokens']['token'])
         except Exception:
-            log.error("Error while trying to start bot ::", exc_info=True)
+            log.error("Error while trying to start the bot", exc_info=True)
 
 
 if __name__ == '__main__':
     bot = hmmm()
+    @bot.event
+    async def on_message_edit(before, after):
+        if await bot.is_owner(after.author):
+            await bot.process_commands(after)
+
+            
     bot.run()
