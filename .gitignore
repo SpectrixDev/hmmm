@@ -1,8 +1,8 @@
 # why are you reading the stupid gitignore rather just star the repo smh
 
 *.json
-/databases
-/servers
+databases/
+servers/
 *.retarded
 *.vs
 

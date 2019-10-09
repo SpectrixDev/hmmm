@@ -1,94 +1,52 @@
-try:
-    # a json implementation for python written in C, provides the
-    # same API
-    import ujson as json
-except ImportError:
-    import json
-
 import discord
 import aiohttp
 import logging
 import pathlib
-import contextlib
+try:
+    import ujson as json
+except ImportError:
+    import json
+
 from discord.ext import commands
 from datetime import datetime
 
-with open("databases/thesacredtexts.json") as f:
-    config = json.load(f)
 
-
-# let's make the stdout look pretty for logging :D
-
-class ANSIFormatter(logging.Formatter):
-    def __init__(self):
-        super().__init__(fmt="[{asctime} {name}/{levelname}]: {message}",
-                         datefmt=r"%Y/%m/%d %H:%M:%S", style="{")
-        self.codes = {
-            "WARN": "\33[33m",
-            "CRITICAL": "\33[95m",
-            "ERROR": "\33[31m",
-            "DEBUG": "\33[32;1m",
-            "RESET": "\33[0m"
-        }
-
-    def format(self, r):
-        if r.levelname == "WARNING":
-            r.levelname = "WARN"
-        if r.levelname in self.codes:
-            r.msg = self.codes[r.levelname] + str(r.msg) + self.codes["RESET"]
-        
-        return super().format(r)
-
-
-handler = logging.StreamHandler()
-handler.setFormatter(ANSIFormatter())
-
-log = logging.getLogger("hmmm")
-cogs = logging.getLogger("cogs")
-cogs.setLevel(logging.DEBUG)
-cogs.addHandler(handler)
-
-log.setLevel(logging.DEBUG)
-log.addHandler(handler)
+log = logging.getLogger(__name__)
 
 
 class hmmm(commands.AutoShardedBot):
-    def __init__(self):
-        super().__init__(command_prefix=commands.when_mentioned_or("??"), case_insensitive=True)
+    def __init__(self, config):
+        super().__init__(command_prefix=commands.when_mentioned_or(config.get("prefix", "??")), case_insensitive=True)
         self.remove_command("help")
+        self.config = config
         self.owners = set(config.get("owners", {}))
         self.uptime = datetime.utcnow()
         
 
-    async def update_activity(self):
-        await self.change_presence(
-            activity=discord.Activity(
-                name=f"??help | {len(self.guilds)} guilds.",
-                type=1,
-                url="https://www.twitch.tv/SpectrixYT"
-            )
-        )
+    async def update(self):
+        activity = discord.Activity(name=f"??help | {len(self.guilds)} guilds.", type=1, url="https://www.twitch.tv/SpectrixYT")
+        await self.change_presence(activity=activity)
 
-        payload = {"server_count" : len(self.guilds)}
+        if self.config.get("dbl_token"):
+            
+            payload = {"server_count" : len(self.guilds)}
+            headers = {"Authorization": self.config["tokens"]["dbl"]}
 
-        url = "https://top.gg/api/bots/320590882187247617/stats"
-        headers = {"Authorization": config["tokens"]["dbltoken"]}
-
-        async with self.session.post(url, json=payload, headers=headers) as resp:
-            if resp.status == 200:
-                log.info("Sent DBL stats")
-            else:
+            async with self.session.post(f"https://top.gg/api/bots/{self.user.id}/stats", json=payload, headers=headers) as resp:
                 data = await resp.json()
-                log.warning(f"Did not get a OK response: {resp.method} {resp._url} {resp.status} {data}")
+                if resp.status == 200:
+                    log.info(f"Recieved 200 OK response, {data}")
+                else:
+                    log.warning(f"Did not get a OK response: {resp.method} {resp._url} {resp.status} {data}")
 
 
     async def on_connect(self):
-        log.info("Connecting to discord")
+        log.info("Connecting to discord...")
+        await self.change_presence(status=discord.Status.dnd, activity=discord.Activity(name="myself start", type=discord.ActivityType.watching))
         self.session = aiohttp.ClientSession(json_serialize=json.dumps)
 
     async def on_ready(self):
-        await self.update_activity()
-
+        await self.update()
         log.info(f"{self.user} is ready")
         log.info(f"ID: {self.user.id}")
         log.info(f"Created At: {self.user.created_at}")
@@ -139,17 +97,7 @@ class hmmm(commands.AutoShardedBot):
                     
                     
 
-            super().run(config['tokens']['token'])
+            super().run(self.config.get("bot_token"))
         except Exception:
             log.error("Error while trying to start the bot", exc_info=True)
 
-
-if __name__ == '__main__':
-    bot = hmmm()
-    @bot.event
-    async def on_message_edit(before, after):
-        if await bot.is_owner(after.author):
-            await bot.process_commands(after)
-
-            
-    bot.run()

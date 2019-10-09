@@ -1,2 +1,3 @@
-discord.py[voice]
-jishaku
+discord.py[voice]==1.2.3
+jishaku==1.16.3.159
+ujson==1.35; sys_platform != "win32"

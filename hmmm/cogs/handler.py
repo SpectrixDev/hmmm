@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 
-G_MESSAGE = """
+GUILD_MESSAGE = """
 COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id}   NAME: {ctx.author}
 CHANNEL:    ID: {ctx.channel.id}   NAME: {ctx.channel}
@@ -39,7 +39,7 @@ INVOCATION: {ctx.message.content}
 """
 
 
-G_COMMAND_MESSAGE = """
+GUILD_COMMAND_MESSAGE = """
 COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id}   NAME: {ctx.author}
 CHANNEL:    ID: {ctx.channel.id}   NAME: {ctx.channel}
@@ -53,7 +53,7 @@ class EventHandler(commands.Cog):
     
     @Cog.listener()
     async def on_guild_join(self, guild):
-        await self.bot.update_activity()
+        await self.bot.update()
 
         if guild.system_channel and guild.system_channel.permissions_for(guild.me).send_messages:
             embed = discord.Embed(color=discord.Color(value=0x36393e))
@@ -63,19 +63,19 @@ class EventHandler(commands.Cog):
             embed.add_field(name="Support Server", value="[Join, it's fun here](https://discord.gg/Kghqehz)")
             embed.add_field(name="Upvote", value="[Click here](https://discordbots.org/bot/320590882187247617/vote)")
             embed.set_thumbnail(url="https://styles.redditmedia.com/t5_2qq6z/styles/communityIcon_ybmhghdu9nj01.png")
-            embed.set_footer(text=f"Thanks to you, this monstrosity of a bot is now on {len(self.bot.guilds)} servers!", icon_url="https://media.giphy.com/media/ruw1bRYN0IXNS/giphy.gif")
+            embed.set_footer(text=f"Thanks to you, this monstrosity of a bot is now on {len(self.bot.guilds):,d} servers!", icon_url="https://media.giphy.com/media/ruw1bRYN0IXNS/giphy.gif")
             await guild.system_channel.send(content="**Hello World! Thanks for inviting me! :wave: **", embed=embed)
 
     @Cog.listener()
     async def on_guild_remove(self, guild):
-        await self.bot.update_activity()
+        await self.bot.update()
 
 
 
     @Cog.listener()
     async def on_command_completion(self, ctx):
         if ctx.guild:
-            MESSAGE = G_COMMAND_MESSAGE.format(ctx=ctx)
+            MESSAGE = GUILD_COMMAND_MESSAGE.format(ctx=ctx)
         else:
             MESSAGE = COMMAND_MESSAGE.format(ctx=ctx)
         
@@ -123,7 +123,7 @@ class EventHandler(commands.Cog):
 
             
         if ctx.guild:
-            MESSAGE = G_MESSAGE.format(ctx=ctx, error=error)
+            MESSAGE = GUILD_MESSAGE.format(ctx=ctx, error=error)
 
             
         else:

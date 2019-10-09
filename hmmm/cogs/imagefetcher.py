@@ -85,7 +85,7 @@ class SubredditHandler:
         if self.cache.get(subreddit, []) == []:
             attempts = 0
             while attempts < 5:
-                async with self.bot.session.get(f"https://reddit.com/r/{subreddit}/new.json?sort=top&limit=300") as resp:
+                async with self.bot.session.get(f"https://reddit.com/r/{subreddit}/new.json?sort=top&limit=500") as resp:
                     log.debug("{0.method} {0._url} {0.status} {0.reason}".format(resp))
                     
                     try:
@@ -208,7 +208,7 @@ class ImageFetcher(commands.Cog):
             embed.description += f"__**r/{sub}**__: {count}\n"
         
         
-        embed.description += f"\nHTTP Cache: {len(result['http_cache'])}\n"
+        embed.description += f"\nCached HTTP request json: {len(result['http_cache'])}\n"
         for sub, count in result["http_cache"].items():
             embed.description += f"__**r/{sub}**__: {count}\n"
         
