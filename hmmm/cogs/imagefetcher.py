@@ -8,7 +8,7 @@ from discord.ext import commands
 
 
 log = logging.getLogger(__name__)
-accepted_extensions = [".png",".jpg",".jpeg",".gif",".gifv",".webm",".mp4","imgur.com"]
+accepted_extensions = [".png",".jpg",".jpeg",".gif",".gifv",".webm",".mp4",".mp3"]
 
 
 class HmmException(Exception):

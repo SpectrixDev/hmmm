@@ -70,8 +70,6 @@ class EventHandler(commands.Cog):
     async def on_guild_remove(self, guild):
         await self.bot.update()
 
-
-
     @Cog.listener()
     async def on_command_completion(self, ctx):
         if ctx.guild:

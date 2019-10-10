@@ -17,8 +17,8 @@ class General(commands.Cog):
     async def ping(self, ctx):
         await ctx.send(f"**:ping_pong: {round(self.bot.latency * 1000)}ms**")
 
-    @commands.command()
-    async def help(self, ctx):
+    @commands.command(name="help")
+    async def _help(self, ctx):
         e = discord.Embed(color=discord.Color(value=0xc904e2))
         e.set_author(name="Command documentation")
         e.add_field(name="??hmmm", value="- Sends an oddly funny image, freshly stashed. You can also use **??hm, ??hmm, ??hmmmm for aliases.**\n")
@@ -43,17 +43,13 @@ class General(commands.Cog):
 
     @commands.command(aliases=['support'])
     async def server(self, ctx):
-        try:
-            await ctx.author.send("**https://discord.gg/Kghqehz**\n*Here's my official server!*")
-            message = await ctx.send("**I sent you my server invite in your DMs :mailbox_with_mail:**")
-        except Exception:
-            message = await ctx.send(f"**{ctx.author.mention} https://discord.gg/Kghqehz/**\n*Here's my official server!*")
+        message = await ctx.send(f"{ctx.author.mention} https://discord.gg/Kghqehz/**\n*Here's my official server!")
         await message.add_reaction("🤔")
 
     @commands.command()
     async def invite(self, ctx):
         url = discord.utils.oauth_url(self.bot.user.id, discord.Permissions(321600))
-        await ctx.send(f"**<{url}>** Here's my invite!")
+        await ctx.send(f"Here's my invite!\n<{url}>")
 
 
 def setup(bot):

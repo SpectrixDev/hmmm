@@ -5,13 +5,14 @@ import logging
 
 class ANSIFormatter(logging.Formatter):
     def __init__(self):
-        super().__init__(fmt="[{asctime} {name}/{levelname}]: {message}", datefmt=r"%Y/%m/%d %H:%M:%S", style="{")
+        super().__init__(fmt="\033[1;30m[{asctime} {name}/{levelname}]: {message}", datefmt=r"%Y/%m/%d %H:%M:%S", style="{")
         self.codes = {
-            "WARN": "\33[33m",
-            "CRITICAL": "\33[95m",
-            "ERROR": "\33[31m",
-            "DEBUG": "\33[32;1m",
-            "RESET": "\33[0m"
+            "WARN": "\033[33m",
+            "CRITICAL": "\033[95m",
+            "ERROR": "\033[31m",
+            "DEBUG": "\033[32;1m",
+            "RESET": "\033[0m",
+            "INFO" : "\033[1;32m"
         }
 
     def format(self, r):
