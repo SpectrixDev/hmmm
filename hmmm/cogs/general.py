@@ -49,14 +49,9 @@ class General(commands.Cog):
 
     @commands.command()
     async def invite(self, ctx):
-        stable = discord.utils.oauth_url(self.bot.user.id, discord.Permissions(8))
-        beta = discord.utils.oauth_url(631021131587125260, discord.Permissions(8))
-
+        url = discord.utils.oauth_url(self.bot.user.id, discord.Permissions(8))
         embed = discord.Embed(title="Invites", color=discord.Color.dark_blue())
-        embed.description = "\n".join([
-            f"[Main bot]({stable})",
-            f"[Beta bot]({beta})"
-        ])
+        embed.description = f"[Click Here]({url}) to invite {self.bot.user.name} to your server"
         await ctx.send(embed=embed)
 
 
