@@ -27,11 +27,11 @@ if sys.platform != "win32":
         import uvloop
     except ImportError:
         log.error("Importing uvloop failed, ignoring")
-        asyncio.set_event_loop(asyncio.ProactorEventLoop())
     else:
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 else:
+    asyncio.set_event_loop(asyncio.ProactorEventLoop())
     # workaround for ANSI rendering for the command prompt and other consoles 
     k32 = ctypes.windll.kernel32
     k32.SetConsoleMode(k32.GetStdHandle(-11), 7)
