@@ -51,11 +51,12 @@ INVOCATION: {ctx.message.clean_content}
 class EventHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.webhook = discord.AsyncWebhookAdapter(self.bot.session)
     
     @Cog.listener()
     async def on_guild_join(self, guild):
         await self.bot.update()
-
+        
         if guild.system_channel and guild.system_channel.permissions_for(guild.me).send_messages:
             embed = discord.Embed(color=discord.Color(value=0x36393e))
             embed.set_author(name="Confused? You should be, this bot makes no sense. Take this, it might help:")
@@ -87,10 +88,10 @@ class EventHandler(commands.Cog):
         if hasattr(ctx.command, 'on_error'):
             return
         
-        ignored = (commands.UserInputError)
+        ignored = (commands.UserInputError, commands.CommandNotFound)
         error = getattr(error, 'original', error)
         
-        if isinstance(error, ignored):
+        if isinstance(error, ignored): 
             return
 
         elif isinstance(error, commands.DisabledCommand):
@@ -112,15 +113,14 @@ class EventHandler(commands.Cog):
 
         elif isinstance(error, commands.NSFWChannelRequired):
             # https://discordpy.readthedocs.io/en/latest/ext/commands/api.html#discord.ext.commands.is_nsfw
-            return await ctx.send("**:no_entry: This post can only be sent in a NSFW channel, as the image could be weird, dark, funny, or __disgusting...__ I can't always stop the bad stuff.**")
+            return await ctx.send("**:no_entry: This command can only be used in a NSFW channel, as the image could be weird, dark, funny, or __disgusting...__ I can't always stop the bad stuff.**")
 
         elif isinstance(error, commands.MissingPermissions):
             return await ctx.send("**:no_entry: You have insufficient permissions to run this command.")
 
             
-        payload = {
-            "content" : None
-        }
+        payload = {}
+
         if ctx.guild:
             MESSAGE = GUILD_MESSAGE.format(ctx=ctx, error=error)
             payload["content"] =  f"```md\n{GUILD_MESSAGE.format(ctx=ctx, error=error)}\n```"
@@ -133,8 +133,8 @@ class EventHandler(commands.Cog):
 
         
         if self.bot.config.get("webhook_url"):
-            webhook = discord.AsyncWebhookAdapter(self.bot.session)
-            await webhook.request("POST", self.bot.config.get("webhook_url"), payload)
+            
+            await self.webhook.request("POST", self.bot.config.get("webhook_url"), payload)
             log.error(MESSAGE)
             await ctx.send("Seems like an unhandled error has occured, my creator has been notified!")
 

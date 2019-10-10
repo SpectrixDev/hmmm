@@ -177,6 +177,7 @@ class ImageFetcher(commands.Cog):
         async with ctx.channel.typing():
             await self.send_sub(ctx, "hmmm")
     
+    @commands.is_nsfw()
     @commands.command(aliases=['cursedimage', 'cursedimages'])
     async def cursed(self, ctx):
         await self.send_sub(ctx, "cursedimages")

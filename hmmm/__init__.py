@@ -13,15 +13,19 @@ from datetime import datetime
 
 log = logging.getLogger(__name__)
 
+def get_prefix(bot, message):
+    return [f"<@{bot.user.id}> ", bot.config.get("prefix")]
+
 
 class Hmmm(commands.AutoShardedBot):
     def __init__(self, config):
-        super().__init__(command_prefix=commands.when_mentioned_or(config.get("prefix", "??")), case_insensitive=True)
+        super().__init__(command_prefix=get_prefix, case_insensitive=True)
         self.remove_command("help")
         self.config = config
         self.owners = set(config.get("owners", {}))
         self.uptime = datetime.utcnow()
         self.debug_mode = config.get("debug_mode", True)
+
 
 
     async def is_owner(self, user):
