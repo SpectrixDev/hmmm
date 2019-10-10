@@ -43,7 +43,7 @@ class General(commands.Cog):
 
     @commands.command(aliases=['support', 'guild'])
     async def server(self, ctx):
-        message = await ctx.send(f"{ctx.author.mention} <https://discord.gg/Kghqehz>/\nHere's my official server!")
+        message = await ctx.send(f"{ctx.author.mention} <https://discord.gg/Kghqehz>\nHere's my official server!")
         await message.add_reaction("🤔")
 
     @commands.command()
