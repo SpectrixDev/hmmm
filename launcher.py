@@ -11,15 +11,11 @@ import os
 import asyncio
 from hmmm import Hmmm
 from datetime import datetime
-from hmmm.utils import LogFormatter
 
 
 log = logging.getLogger("hmmm")
 log.setLevel(logging.DEBUG)
-
-
 FILENAME = datetime.utcnow().strftime("logs/%Y-%m-%d_%H-%M-%S.log")
-
 
 
 if sys.platform != "win32":
@@ -36,14 +32,40 @@ else:
     k32.SetConsoleMode(k32.GetStdHandle(-11), 7)
 
 
+class LogFormatter(logging.Formatter):
+    def __init__(self, use_ansi=True):
+        if use_ansi:
+            super().__init__(fmt="\033[1;30m[{asctime} {name}/{levelname}]: {message}", datefmt=r"%Y/%m/%d %H:%M:%S", style="{")
+        else:
+            super().__init__(fmt="[{asctime} {name}/{levelname}]: {message}", datefmt=r"%Y/%m/%d %H:%M:%S", style="{")
+        self.use_ansi = use_ansi
+        self.codes = {
+            "WARN": "\033[33m",
+            "CRITICAL": "\033[95m",
+            "ERROR": "\033[31m",
+            "DEBUG": "\033[32;1m",
+            "RESET": "\033[0m",
+            "INFO" : "\033[1;32m"
+        }
+
+    def format(self, r: logging.LogRecord):
+        if r.levelname == "WARNING":
+            r.levelname = "WARN"
+        if r.levelname in self.codes and self.use_ansi:
+            r.msg = self.codes[r.levelname] + str(r.msg) + self.codes["RESET"]
+        return super().format(r)
+
+
+
+
+
 
 
 def launch():    
     if not os.path.exists("logs"):
         os.mkdir("logs")
 
-    with open("config.json") as f:
-        config = json.load(f)
+    
 
 
     logfile = logging.FileHandler(FILENAME, "w", "utf-8")
@@ -54,9 +76,10 @@ def launch():
     
     log.handlers = [logfile, handler]
     
-
-    bot = Hmmm(config=config)
-    bot.run(config["bot_token"])
+    with open("config.json") as f:
+        config = json.load(f)
+        bot = Hmmm(config=config)
+        bot.run(config["bot_token"])
 
 
 launch()
