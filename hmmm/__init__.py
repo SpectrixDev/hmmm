@@ -21,6 +21,7 @@ class Hmmm(commands.AutoShardedBot):
         self.config = config
         self.owners = set(config.get("owners", {}))
         self.uptime = datetime.utcnow()
+        self.debug_mode = config.get("debug_mode", True)
 
 
     async def is_owner(self, user):
@@ -35,6 +36,7 @@ class Hmmm(commands.AutoShardedBot):
         log.info(f"User Count: {len(set(self.get_all_members()))}")
         log.info(f"Channel Count: {len(set(self.get_all_channels()))}")
         log.info(f"Guild Count: {len(self.guilds)}")
+        log.info(f"Debug Mode: {self.debug_mode}")
         
 
     
@@ -72,7 +74,7 @@ class Hmmm(commands.AutoShardedBot):
         activity = discord.Activity(name=f"??help | {len(self.guilds)} guilds.", type=1, url="https://www.twitch.tv/SpectrixYT")
         await self.change_presence(activity=activity)
 
-        if self.config.get("dbl_token"):
+        if self.config.get("dbl_token") and not self.debug_mode:
             
             payload = {"server_count" : len(self.guilds)}
             headers = {"Authorization": self.config["dbl_token"] }
