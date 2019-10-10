@@ -25,10 +25,9 @@ FILENAME = datetime.utcnow().strftime("logs/%Y-%m-%d_%H-%M-%S.log")
 if sys.platform != "win32":
     try:
         import uvloop
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     except ImportError:
         log.error("Importing uvloop failed, ignoring")
-    else:
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 else:
     asyncio.set_event_loop(asyncio.ProactorEventLoop())
