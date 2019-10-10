@@ -21,14 +21,14 @@ class General(commands.Cog):
     async def _help(self, ctx):
         e = discord.Embed(color=discord.Color(value=0xc904e2))
         e.set_author(name="Command documentation")
-        e.add_field(name="??hmmm", value="- Sends an oddly funny image, freshly stashed. You can also use **??hm, ??hmm, ??hmmmm for aliases.**\n")
+        e.add_field(name=f"??hmmm", value="- Sends an oddly funny image, freshly stashed. You can also use **??hm, ??hmm, ??hmmmm for aliases.**")
         e.add_field(name="??cursed", value="- [**NSFW**] Sends you a cursed image. You never know what you're gonna get. Could be weird, dark, funny, or disgusting... **NSFW channel required.**\n")
         e.add_field(name="??imsorryjon", value="- Sends images of innocent cartoon characters, usually Garfield, but with a dark twist. A **very**, dark twist...")
         e.add_field(name="??surrealmeme", value="- Sends a surreal meme. Surreal memes are memes that make no logical sense, and are somehow amusing.")
         e.add_field(name="??ooer", value="- Sends completely *n͘͞or҉͡ḿ́al̷͏ images* from a completely n̢̢͠o̢̢͡͞҉ŕ̴͘͟m̨҉̨a͢͞͏̀l̢̕͠͝ place...  ***l e m o n***")
         e.add_field(name="Other commands", value="??ping, ??uptime, ??help, ??support, ??healthcheck")
         e.set_footer(text='"Much more coming soon. I think... but then again I question my sanity every time I write another line of code..." - Spectrix')
-        e.set_thumbnail(url="https://styles.redditmedia.com/t5_2qq6z/styles/communityIcon_ybmhghdu9nj01.png")
+        e.set_thumbnail(url=str(self.bot.user.avatar_url))
         await ctx.send(embed=e)
 
     @commands.command()
@@ -41,14 +41,14 @@ class General(commands.Cog):
 
 
 
-    @commands.command(aliases=['support'])
+    @commands.command(aliases=['support', 'guild'])
     async def server(self, ctx):
-        message = await ctx.send(f"{ctx.author.mention} https://discord.gg/Kghqehz/**\n*Here's my official server!")
+        message = await ctx.send(f"{ctx.author.mention} <https://discord.gg/Kghqehz>/\nHere's my official server!")
         await message.add_reaction("🤔")
 
     @commands.command()
     async def invite(self, ctx):
-        url = discord.utils.oauth_url(self.bot.user.id, discord.Permissions(321600))
+        url = discord.utils.oauth_url(self.bot.user.id, discord.Permissions(8))
         await ctx.send(f"Here's my invite!\n<{url}>")
 
 

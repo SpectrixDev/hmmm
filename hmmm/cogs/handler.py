@@ -4,6 +4,7 @@ import sys
 import traceback
 import logging
 import discord
+from discord import utils
 from discord.ext import commands
 from discord.ext.commands import Cog
 
@@ -26,7 +27,7 @@ ERROR:
 DM_MESSAGE = """
 COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id} NAME: {ctx.author}
-INVOCATION: {ctx.message.content}     
+INVOCATION: {ctx.message.clean_content}     
 
 ERROR: 
 {error}
@@ -35,7 +36,7 @@ ERROR:
 COMMAND_MESSAGE = """
 COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id} NAME: {ctx.author}
-INVOCATION: {ctx.message.content}     
+INVOCATION: {ctx.message.clean_content}     
 """
 
 
@@ -44,7 +45,7 @@ COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id}   NAME: {ctx.author}
 CHANNEL:    ID: {ctx.channel.id}   NAME: {ctx.channel}
 GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count} 
-INVOCATION: {ctx.message.content}     
+INVOCATION: {ctx.message.clean_content}     
 """
 
 class EventHandler(commands.Cog):
@@ -58,13 +59,13 @@ class EventHandler(commands.Cog):
         if guild.system_channel and guild.system_channel.permissions_for(guild.me).send_messages:
             embed = discord.Embed(color=discord.Color(value=0x36393e))
             embed.set_author(name="Confused? You should be, this bot makes no sense. Take this, it might help:")
-            embed.add_field(name="Prefix", value="`??`, or **mention me.**")
-            embed.add_field(name="Command help", value="??help")
+            embed.add_field(name="Prefix", value=f"`{self.bot.config.get('prefix')}`, or **mention me.**")
+            embed.add_field(name="Command help", value=f"{self.bot.config.get('prefix')}help")
             embed.add_field(name="Support Server", value="[Join, it's fun here](https://discord.gg/Kghqehz)")
-            embed.add_field(name="Upvote", value="[Click here](https://discordbots.org/bot/320590882187247617/vote)")
-            embed.set_thumbnail(url="https://styles.redditmedia.com/t5_2qq6z/styles/communityIcon_ybmhghdu9nj01.png")
+            embed.add_field(name="Upvote", value=f"[Click here](https://discordbots.org/bot/{self.bot.user.id}/vote)")
+            embed.set_thumbnail(url=str(self.bot.user.avatar_url))
             embed.set_footer(text=f"Thanks to you, this monstrosity of a bot is now on {len(self.bot.guilds):,d} servers!", icon_url="https://media.giphy.com/media/ruw1bRYN0IXNS/giphy.gif")
-            await guild.system_channel.send(content="**Hello World! Thanks for inviting me! :wave: **", embed=embed)
+            await guild.system_channel.send(content="**Hello gamers! Thanks for inviting me! :wave: **", embed=embed)
 
     @Cog.listener()
     async def on_guild_remove(self, guild):
@@ -82,10 +83,7 @@ class EventHandler(commands.Cog):
 
     @Cog.listener()
     async def on_command_error(self, ctx, error):
-        """The event triggered when an error is raised while invoking a command.
-        ctx   : Context
-        error : Exception"""
-
+        
         if hasattr(ctx.command, 'on_error'):
             return
         
@@ -120,16 +118,25 @@ class EventHandler(commands.Cog):
             return await ctx.send("**:no_entry: You have insufficient permissions to run this command.")
 
             
+        payload = {
+            "content" : None
+        }
         if ctx.guild:
             MESSAGE = GUILD_MESSAGE.format(ctx=ctx, error=error)
-
+            payload["content"] =  f"```md\n{GUILD_MESSAGE.format(ctx=ctx, error=error)}\n```"
+            
             
         else:
             MESSAGE = DM_MESSAGE.format(ctx=ctx, error=error)
-
+            payload["content"] =  f"```md\n{DM_MESSAGE.format(ctx=ctx, error=error)}\n```"
             
+
         
-        log.error(MESSAGE)
+        if self.bot.config.get("webhook_url"):
+            webhook = discord.AsyncWebhookAdapter(self.bot.session)
+            await webhook.request("POST", self.bot.config.get("webhook_url"), payload)
+            log.error(MESSAGE)
+            await ctx.send("Seems like an unhandled error has occured, my creator has been notified!")
 
 def setup(bot):
     bot.add_cog(EventHandler(bot))

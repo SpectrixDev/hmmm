@@ -203,12 +203,12 @@ class ImageFetcher(commands.Cog):
             description=str()
         )
 
-        embed.description += f"History Cache: {len(result['history'])}\n"
+        embed.description += f"History cache: {len(result['history'])}\n"
         for sub, count in result["history"].items():
             embed.description += f"__**r/{sub}**__: {count}\n"
         
         
-        embed.description += f"\nCached HTTP request json: {len(result['http_cache'])}\n"
+        embed.description += f"\nUnused cache: {len(result['http_cache'])}\n"
         for sub, count in result["http_cache"].items():
             embed.description += f"__**r/{sub}**__: {count}\n"
         
