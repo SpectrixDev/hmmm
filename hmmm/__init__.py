@@ -2,6 +2,7 @@ import discord
 import aiohttp
 import logging
 import pathlib
+import zlib
 try:
     import ujson as json
 except ImportError:
@@ -9,7 +10,7 @@ except ImportError:
 
 from discord.ext import commands
 from datetime import datetime
-
+from collections import Counter
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +26,8 @@ class Hmmm(commands.AutoShardedBot):
         self.owners = set(config.get("owners", {}))
         self.uptime = datetime.utcnow()
         self.debug_mode = config.get("debug_mode", True)
-
+        self._zlib = zlib.decompressobj()
+        self.socketstats = Counter()
 
 
     async def is_owner(self, user):
@@ -41,7 +43,15 @@ class Hmmm(commands.AutoShardedBot):
         log.info(f"Channel Count: {len(set(self.get_all_channels()))}")
         log.info(f"Guild Count: {len(self.guilds)}")
         log.info(f"Debug Mode: {self.debug_mode}")
-        
+    
+
+    async def on_socket_raw_receive(self, message):
+        data = self._zlib.decompress(message)
+        data = json.loads(data)
+        if data.get("t"):
+            self.socketstats[data["t"]] += 1
+
+
 
     
     async def on_connect(self):

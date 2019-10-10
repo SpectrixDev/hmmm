@@ -198,12 +198,12 @@ class ImageFetcher(commands.Cog):
     async def debug_stats(self, ctx):
         result = self.handler.debug_stats()
         embed = discord.Embed(
-            title="\U0001f493 Cache stats",
+            title="\U0001f493 Caching statistics",
             color=discord.Color.dark_purple(),
             description=str()
         )
 
-        embed.description += f"History cache: {len(result['history'])}\n"
+        embed.description += f"Used cache: {len(result['history'])}\n"
         for sub, count in result["history"].items():
             embed.description += f"__**r/{sub}**__: {count}\n"
         
