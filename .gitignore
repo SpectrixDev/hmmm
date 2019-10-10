@@ -1,10 +1,9 @@
 # why are you reading the stupid gitignore rather just star the repo smh
 
 *.json
-databases/
-servers/
-*.retarded
 *.vs
+*.txt
+*config*
 
 logs/
 
@@ -15,6 +14,7 @@ __pycache__/
 
 # C extensions
 *.so
+*.dll
 
 # Distribution / packaging
 .Python
