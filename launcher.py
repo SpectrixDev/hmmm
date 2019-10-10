@@ -7,10 +7,11 @@ except ImportError:
 import logging
 import ctypes
 import sys
+import os
 import asyncio
 from hmmm import Hmmm
 from datetime import datetime
-from hmmm.utils import ANSIFormatter
+from hmmm.utils import LogFormatter
 
 
 log = logging.getLogger("hmmm")
@@ -38,17 +39,21 @@ else:
 
 
 
-def launch():
-    
-    logfile = logging.FileHandler(FILENAME, "w", "utf-8")
-    handler = logging.StreamHandler()
-    handler.setFormatter(ANSIFormatter())
-
-    log.addHandler(logfile)
-    log.addHandler(handler)
+def launch():    
+    if not os.path.exists("logs"):
+        os.mkdir("logs")
 
     with open("config.json") as f:
         config = json.load(f)
+
+
+    logfile = logging.FileHandler(FILENAME, "w", "utf-8")
+    handler = logging.StreamHandler()
+
+    handler.setFormatter(LogFormatter())
+    logfile.setFormatter(LogFormatter(use_ansi=False))
+    
+    log.handlers = [logfile, handler]
     
 
     bot = Hmmm(config=config)
