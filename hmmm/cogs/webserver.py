@@ -8,7 +8,7 @@ from aiohttp import web
 
 log = logging.getLogger(__name__)
 
-class Webserver:
+class Webserver(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -42,11 +42,12 @@ class Webserver:
 
 
 
+
 ws = None
 def setup(bot):
     ws = Webserver(bot)
-    bot.loop.run_until_complete(ws.start())
+    bot.loop.create_task(ws.start())
     bot.add_cog(ws)
 
 def teardown(bot):
-    bot.loop.run_until_complete(ws.stop())
+    bot.loop.create_task(ws.stop())
