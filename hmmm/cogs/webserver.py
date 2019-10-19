@@ -21,6 +21,9 @@ class Webserver(commands.Cog):
         self._server = None
         self._session = None
 
+    def cog_unload(self):
+        asyncio.run_coroutine_threadsafe(self._server.stop(), loop=self.bot.loop)   
+
     async def start(self):
         self._session = aiohttp.ClientSession()
         await self._runner.setup()
@@ -29,9 +32,7 @@ class Webserver(commands.Cog):
         
 
     async def stop(self):
-        if not self._session:
-            raise RuntimeError("must call start() first")
-        await self._runner.cleanup()
+        await self._server.stop()
     
     async def vote_handler(self, request):
         if request.headers.get("Authorization") == self.bot.config["server"]["auth"]:   
@@ -43,11 +44,8 @@ class Webserver(commands.Cog):
 
 
 
-ws = None
+
 def setup(bot):
     ws = Webserver(bot)
     bot.loop.create_task(ws.start())
     bot.add_cog(ws)
-
-def teardown(bot):
-    bot.loop.create_task(ws.stop())
