@@ -31,3 +31,10 @@ class Webserver(commands.Cog):
             log.debug("Hiiiiiii dbl")
             data = await request.json()
             await self._webhook.request("POST", self.bot.config["server"]["webhook"], {"content" : str(data)})
+        
+
+
+
+
+def setup(bot):
+    bot.add_cog(Webserver(bot))
