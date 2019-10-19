@@ -11,6 +11,7 @@ except ImportError:
 from discord.ext import commands
 from datetime import datetime
 from collections import Counter
+from hmmm.modules.webserver import Webserver
 
 log = logging.getLogger(__name__)
 
@@ -33,6 +34,8 @@ class Hmmm(commands.AutoShardedBot):
         self._zlib = zlib.decompressobj()
         self.socketstats = Counter()
         self.command_usage = Counter()
+        self.webserver = Webserver(self)
+        self.session  = None
 
 
     async def is_owner(self, user):
@@ -60,12 +63,13 @@ class Hmmm(commands.AutoShardedBot):
 
     
     async def on_connect(self):
-        log.info("Connecting to discord...")
-        await self.change_presence(status=discord.Status.dnd, activity=discord.Activity(name="myself start", type=discord.ActivityType.watching))
         self.session = aiohttp.ClientSession(json_serialize=json.dumps)
+        await self.webserver.start()
+        await self.change_presence(status=discord.Status.dnd, activity=discord.Activity(name="myself start", type=3))   
 
         extensions = [x.as_posix().replace("/", ".") for x in pathlib.Path("hmmm/cogs").iterdir() if x.is_file() and x.name.endswith(".py")]
         extensions.append("jishaku")
+
         for ext in extensions:
             try:
                 self.load_extension(ext.replace(".py", ""))
@@ -108,6 +112,7 @@ class Hmmm(commands.AutoShardedBot):
     async def logout(self):
         log.debug("logout() got called, logging out and cleaning up tasks")
         try:
+            await self.webserver.stop()
             await self.session.close()
         except:
             #TODO: find what exception is raised when the session was already closed

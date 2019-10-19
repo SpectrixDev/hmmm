@@ -1,5 +1,6 @@
 import discord
 import logging
+import asyncio
 from discord.ext import commands
 from aiohttp import web
 
@@ -7,25 +8,23 @@ from aiohttp import web
 
 log = logging.getLogger(__name__)
 
-class Webserver(commands.Cog):
+class Webserver:
 
     def __init__(self, bot):
         self.bot = bot
         self.app = web.Application()
         self._runner = web.AppRunner(self.app)
-        self._server = web.TCPSite(self._runner, bot.config["server"]["host"], bot.config["server"]["port"])
+        self._server = None
+
+    async def start(self):
         self._webhook = discord.AsyncWebhookAdapter(self.bot.session)
-        self.bot.loop.run_until_complete(self._runner.setup())
-        self.bot.loop.run_until_complete(self._server.start())
+        await self._runner.setup()
+        self._server = web.TCPSite(self._runner, self.bot.config["server"]["host"], self.bot.config["server"]["port"])
+        await self._server.start()
+
+    async def stop(self):
+        await self._runner.cleanup()
     
-
-    def cog_unload(self):
-        if self._runner:
-            self.bot.loop.run_until_complete(self._runner.cleanup())
-    
-
-
-
     async def vote_handler(self, request):
         if request.headers.get("Authorization") == self.bot.config["server"]["auth"]:   
             log.debug("Hiiiiiii dbl")
