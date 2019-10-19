@@ -20,7 +20,11 @@ def get_prefix(bot, message):
 
 class Hmmm(commands.AutoShardedBot):
     def __init__(self, config):
-        super().__init__(command_prefix=get_prefix, case_insensitive=True)
+        super().__init__(
+            command_prefix=get_prefix,
+            case_insensitive=True,
+            description="A bot created for very very weird stuff posted on various subreddits"
+        )
         self.remove_command("help")
         self.config = config
         self.owners = set(config.get("owners", {}))
@@ -28,6 +32,7 @@ class Hmmm(commands.AutoShardedBot):
         self.debug_mode = config.get("debug_mode", True)
         self._zlib = zlib.decompressobj()
         self.socketstats = Counter()
+        self.command_usage = Counter()
 
 
     async def is_owner(self, user):

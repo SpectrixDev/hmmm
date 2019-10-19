@@ -35,53 +35,66 @@ class SubredditHandler:
 
     def debug_stats(self):
         data = {
-            "history": Counter(),
-            "cache": Counter()
+            "used": Counter(),
+            "unused": Counter()
         }
 
         for k, v in self.history.items():
-            data["history"][k] = len(v)
+            data["used"][k] = len(v)
 
         for k, v in self.cache.items():
-            data["cache"][k] = len(v)
+            data["unused"][k] = len(v)
 
         return data
 
     async def get_post(self, subreddit):
+        
+        if not self.cache.get(subreddit):
+            self.cache[subreddit] = list()
+        
+        if not self.history.get(subreddit):
+            self.history[subreddit] = deque(maxlen=self.maxlen)
+
         if self.cache.get(subreddit, []) == []:
             attempts = 0
             while attempts < 5:
                 async with self.bot.session.get(f"https://reddit.com/r/{subreddit}/new.json?sort=top&limit=500") as resp:
+                    if not resp.content_type == "application/json":
+                        data = await resp.content.read()
+                        message = (
+                            "",
+                            "`HTTP {0.status} {0.reason}`".format(resp),
+                            "`Content Type:` `%s`" % resp.content_type,
+                            "Content: ", await resp.content.read()
+                        )
+                        await self.bot.get_cog("EventHandler").webhook_log("\n".join(message))
+
+                    data = await resp.json()
                     log.debug("{0.method} {0._url} {0.status} {0.reason}".format(resp))
 
-                    try:
-                        data = await resp.json()
-                    except (ValueError, TypeError):
-                        data = {}
-
-                    if resp.status == 200 and resp.content_type == "application/json":
+                    if resp.status == 200:
                         if len(data["data"]["children"]) == 0:
                             raise SubredditNotFound(subreddit, resp.status)
 
                         log.debug(f"r/{subreddit}: generating objects")
 
-                        if not self.cache.get(subreddit):
-                            self.cache[subreddit] = list()
-
                         for obj in data["data"]["children"]:
 
                             url = obj["data"].get("url")
-                            if url and any(url.endswith(x) for x in accepted_extensions) and not any(c.url == url for c in self.history.get(subreddit, [])):
-                                kls = Post(
-                                    title=obj["data"]["title"],
-                                    url=url,
-                                    is_nsfw=obj["data"]["over_18"]
-                                )
-                                if kls.title == "hmmm":
-                                    kls.title = ""
 
-                                self.cache[subreddit].append(kls)
-                                log.debug(f"r/{subreddit}: {kls}")
+                            if not url or not any(url.endswith(x) for x in accepted_extensions):
+                                continue
+                            if any(c.url == url for c in self.history.get(subreddit, [])):
+                                continue
+                            
+                            kls = Post(
+                                title=obj["data"]["title"],
+                                url=url,
+                                is_nsfw=obj["data"]["over_18"]
+                            )
+
+                            self.cache[subreddit].append(kls)
+                            log.debug(f"r/{subreddit}: {kls}")
 
                         log.debug(f"r/{subreddit}: refreshed cache")
                         if len(self.cache[subreddit]) == 0:
@@ -99,18 +112,11 @@ class SubredditHandler:
                             return random.choice(self.history[subreddit])
 
                     else:
-                        data = await resp.content.read()
-                        message = f"```fix\nurl: {resp._url}\ncontent type: {resp.content_type}\ndata:\n{data}\n```"
-                        await self.bot.get_cog("EventHandler").webhook_log(message)
-
                         raise UnhandledStatusCode(resp.status_code, resp._url, resp.reason)
 
         val = self.cache[subreddit].pop()
         log.debug(f"fetched {val} from cache")
-        if not subreddit in self.history:
-            self.history.update({subreddit: deque(maxlen=self.maxlen, iterable=[val])})
-        else:
-            self.history[subreddit].append(val)
+        self.history[subreddit].append(val)
 
         return val
 
@@ -160,19 +166,15 @@ class ImageFetcher(commands.Cog):
     async def debug_stats(self, ctx):
         result = self.handler.debug_stats()
         embed = discord.Embed(
-            title="\U0001f493 Caching statistics",
+            title="ImageFetcher statistics",
             color=discord.Color.dark_purple(),
             description=str()
         )
-
-        embed.description += f"Used cache: {len(result['history'])}\n"
-        for sub, count in result["history"].items():
-            embed.description += f"__**r/{sub}**__: {count}\n"
-
-        embed.description += f"\nUnused cache: {len(result['http_cache'])}\n"
-        for sub, count in result["http_cache"].items():
-            embed.description += f"__**r/{sub}**__: {count}\n"
-
+        for type in result:
+            embed.description += f"\n**{type.title()}**:\n"
+            for sub, count in result[type].items():
+                embed.description += f"__r/{sub}__: {count}\n"
+            
         await ctx.send(embed=embed)
 
 
