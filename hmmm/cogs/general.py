@@ -15,15 +15,15 @@ class General(commands.Cog):
 
     @commands.command()
     async def ping(self, ctx):
-        await ctx.send(f"**:ping_pong: {round(self.bot.latency * 1000)}ms**")
+        await ctx.send(f"**:ping_pong: {round(self.bot.latency * 1000, 3)}ms**")
 
     @commands.command(name="help")
     async def _help(self, ctx):
         prefixes = self.bot.command_prefix(ctx.bot, ctx.message)
-        e = discord.Embed(color=discord.Color(value=0xc904e2), description=f"Prefix(es): {', '.join(prefixes)}")
+        e = discord.Embed(color=discord.Color(value=0xc904e2), description=f"Prefixes: {', '.join(prefixes)}")
         e.set_author(name="Command documentation")
         e.add_field(name=f"hmmm", value="- Sends an oddly funny image, freshly stashed. You can also use **hm, hmm, hmmmm for aliases.**")
-        e.add_field(name="cursed", value="- [**NSFW**] Sends you a cursed image. You never know what you're gonna get. Could be weird, dark, funny, or disgusting...")
+        e.add_field(name="cursed", value="- Sends you a cursed image. You never know what you're gonna get. Could be weird, dark, funny, or disgusting...")
         e.add_field(name="imsorryjon", value="- Sends images of innocent cartoon characters, usually Garfield, but with a dark twist. A **very**, dark twist...")
         e.add_field(name="surrealmeme", value="- Sends a surreal meme. Surreal memes are memes that make no logical sense, and are somehow amusing.")
         e.add_field(name="ooer", value="- Sends completely *n͘͞or҉͡ḿ́al̷͏ images* from a completely n̢̢͠o̢̢͡͞҉ŕ̴͘͟m̨҉̨a͢͞͏̀l̢̕͠͝ place...  ***l e m o n***")
@@ -31,7 +31,7 @@ class General(commands.Cog):
         e.set_footer(text='"Much more coming soon. I think... but then again I question my sanity every time I write another line of code..." - Spectrix')
         e.set_thumbnail(url=str(self.bot.user.avatar_url))
         await ctx.send(embed=e)
-
+ 
     @commands.command()
     async def uptime(self, ctx):
         uptime = datetime.utcnow() - self.bot.uptime
