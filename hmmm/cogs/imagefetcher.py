@@ -133,7 +133,7 @@ class ImageFetcher(commands.Cog):
             log.error(error)
             return await ctx.send(error)
 
-        if sub.nsfw and not ctx.channel.is_nsfw():
+        if ctx.guild and sub.nsfw and not ctx.channel.is_nsfw():
             raise commands.NSFWChannelRequired(ctx.channel)
         else:
             if len(sub.title) == 0:
