@@ -117,7 +117,7 @@ class EventHandler(commands.Cog):
             MESSAGE = GUILD_COMMAND_MESSAGE.format(ctx=ctx)
         else:
             MESSAGE = COMMAND_MESSAGE.format(ctx=ctx)
-        self.bot.command_usage[ctx.command] += 1
+        self.bot.command_usage[ctx.command.qualified_name] += 1
         log.info(MESSAGE)
         
 
