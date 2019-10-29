@@ -47,7 +47,6 @@ class Hmmm(commands.AutoShardedBot):
             case_insensitive=True,
             description="A bot created for very very weird stuff posted on various subreddits!"  # nopep8
         )
-        self.remove_command("help")
         self.config = config
         self.owners = set(config.get("owners", {}))
         self.uptime = datetime.utcnow()
