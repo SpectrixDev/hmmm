@@ -116,7 +116,7 @@ class SubredditHandler:
         return val
 
 
-class ImageFetcher(commands.Cog):
+class ImageFetcher(commands.Cog, name="Reddit commands"):
     def __init__(self, bot):
         self.bot = bot
         self.handler = SubredditHandler(self.bot)
@@ -162,7 +162,7 @@ class ImageFetcher(commands.Cog):
         result = self.handler.debug_stats()
         embed = discord.Embed(
             title="ImageFetcher statistics",
-            color=discord.Color.dark_purple(),
+            color=discord.Color.dark_gold(),
             description=str()
         )
         for type in result:

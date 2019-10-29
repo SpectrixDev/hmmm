@@ -8,7 +8,7 @@ from discord.ext.commands import Context, BotMissingPermissions, Command, Group
 class HelpCommand:
     def __init__(self,
         context: Context,
-        check_perms: bool=False,
+        verify_checks: bool=True,
         line_height_span: int=20
     ):
         self.author = context.author
@@ -18,36 +18,13 @@ class HelpCommand:
             "COMMAND" : "\U0001f449",
             "DISABLED" : "\U0001f512"
         }
-        self._use_perms = check_perms
-        self._bot = context.bot
-        self._task = None
-        self._message = None
-        self._indent = 2
-        self._previndent = self._indent
+        self.verify_checks = verify_checks
+        self.bot = context.bot
 
-
-
-
-
-
-
-    def generate_command_output(self, command):
-        table = {
-            "type" : None,
-            "name" : command.qualified_name,
-            "enabled" : "" if command.enabled else self.emojis["DISABLED"]
-        }
-
-        if isinstance(command, Group):
-            print("dis group")
-            table["type"] = self.emojis["GROUP"]
-        else:
-            table["type"] = self.emojis["COMMAND"]
-
-        message = "%s%s %s" %( table["enabled"], table["type"], table["name"])
-        return message
-
-
+    def generate_command_line(self, command):
+        if not isinstance(command, (Command, Group)):
+            raise TypeError("Expected Command or Group, got {0.__class__.__name__}".format(command))
+        # /shrug
 
 
 

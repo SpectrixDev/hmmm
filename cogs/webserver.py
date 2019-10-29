@@ -45,7 +45,7 @@ class Webserver(commands.Cog):
                 description=f"Thanks {user.mention} for voting for me!"
             )
 
-            await self._webhook.request("POST", self.bot.config["server"]["webhook"], {"embed" : embed.to_dict()})
+            await self._webhook.request("POST", self.bot.config["server"]["webhook"], {"embeds" : embed.to_dict()})
 
 
 
