@@ -13,7 +13,7 @@ class Webserver(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.app = web.Application()
-        self._webhook = discord.AsyncWebhookAdapter(self.bot.session)
+        self._webhook = discord.Webhook.from_url(self.bot.config["server"]["webhook"], adapter=discord.AsyncWebhookAdapter(self.bot.session))
         self.app.add_routes([
             web.post(bot.config["server"]["path"], self.vote_handler)
         ])
@@ -34,7 +34,6 @@ class Webserver(commands.Cog):
 
     async def vote_handler(self, request):
         if request.headers.get("Authorization") == self.bot.config["server"]["auth"]:
-
             data = await request.json()
             user = self.bot.get_user(int(data["user"]))
             if user is None:
@@ -42,11 +41,13 @@ class Webserver(commands.Cog):
 
             embed = discord.Embed(
                 title="Somebody has voted!",
-                description=f"Thanks {user.mention} for voting for me!"
+                description=f"Thanks {user.mention} for voting for me!",
+                color=discord.Color.dark_orange()
             )
+            await self._webhook.send(embed=embed)
+            return web.json_response({"error" : False})
 
-            await self._webhook.request("POST", self.bot.config["server"]["webhook"], {"embeds" : embed.to_dict()})
-
+        return web.json_response({"error" : "unauthorized"})
 
 
 
