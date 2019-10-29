@@ -53,19 +53,19 @@ class General(commands.Cog):
         cmd_usage = sum(v for k,v in self.bot.command_usage.items())
 
         description = [
-            self.bot.description + f", {cmd_usage} commands has been executed since last boot\n",
+            self.bot.description + f", {cmd_usage:,d} commands has been executed since last boot\n",
             f"[Upvote](https://top.gg/bot/{self.bot.user.id}/vote)",
             f"[Referral Link](https://billing.galaxygate.net/aff.php?aff=58)",
             f"[Source code](https://github.com/SpectrixOfficial/hmmm)",
             f"[Support Server](https://discord.gg/Kghqehz)"
         ]
         embed = discord.Embed(
-            title="Bot info",
+            title=str(self.bot.user),
             description="\n".join(description),
             color=discord.Color(value=0xc904e2)
         )
         stats = [
-            f"I'm in {len(self.bot.guilds)} guilds",
+            f"I'm in {len(self.bot.guilds):,d} guilds",
             f"Seeing {len(set(self.bot.get_all_channels())):,d} channels",
             f"Listening to {len(set(self.bot.get_all_members())):,d} users"
 

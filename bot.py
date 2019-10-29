@@ -1,11 +1,10 @@
 import os
-import sys
 import zlib
 import asyncio
-import ctypes
 import logging
 import pathlib
 import aiohttp
+import asyncpg
 import discord
 from objects import LogFormatter
 from collections import Counter
@@ -29,16 +28,8 @@ logfile.setFormatter(LogFormatter(use_ansi=False))
 log.handlers = [logfile, handler]
 
 
-if sys.platform == "win32":
-    asyncio.set_event_loop(asyncio.ProactorEventLoop())
-    k32 = ctypes.windll.kernel32
-    k32.SetConsoleMode(k32.GetStdHandle(-11), 7)
-
-
-
 def get_prefix(bot, message):
     return [f"<@{bot.user.id}> ", bot.config.get("prefix")]
-
 
 class Hmmm(commands.AutoShardedBot):
     def __init__(self, config: dict):
@@ -54,6 +45,7 @@ class Hmmm(commands.AutoShardedBot):
         self._zlib = zlib.decompressobj()
         self.socketstats = Counter()
         self.command_usage = Counter()
+        self.db = None
 
 
     async def is_owner(self, user):
@@ -84,7 +76,14 @@ class Hmmm(commands.AutoShardedBot):
         log.info(f"BOOT @ {FILENAME}")
         log.info("Connecting to discord...")
         self.session = aiohttp.ClientSession(json_serialize=json.dumps)
-        await self.change_presence(status=discord.Status.dnd)
+        try:
+            self.db = await asyncpg.create_pool(**self.config["database"])
+        except ConnectionRefusedError:
+            log.critical("Connecting to database was refused! Killing bot")
+            await bot.logout()
+            return
+
+
         extensions = [x.as_posix().replace("/", ".") for x in pathlib.Path("cogs").iterdir() if x.is_file()]
 
         extensions.append("jishaku")
@@ -134,6 +133,8 @@ class Hmmm(commands.AutoShardedBot):
         log.debug("logout() got called, logging out and cleaning up tasks")
         try:
             await self.session.close()
+            if self.db:
+                await self.db.close()
         except (RuntimeError, AttributeError):
             pass
         return await super().logout()
