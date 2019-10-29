@@ -19,27 +19,34 @@ class Webserver(commands.Cog):
         ])
         self._runner = web.AppRunner(self.app)
         self._server = None
-        self._session = None
 
     def cog_unload(self):
-        asyncio.run_coroutine_threadsafe(self._server.stop(), loop=self.bot.loop)   
+        asyncio.run_coroutine_threadsafe(self._server.stop(), loop=self.bot.loop)
 
     async def start(self):
-        self._session = aiohttp.ClientSession()
         await self._runner.setup()
         self._server = web.TCPSite(self._runner, self.bot.config["server"]["host"], self.bot.config["server"]["port"])
         await self._server.start()
-        
+
 
     async def stop(self):
         await self._server.stop()
-    
+
     async def vote_handler(self, request):
-        if request.headers.get("Authorization") == self.bot.config["server"]["auth"]:   
-            log.debug("Hiiiiiii dbl")
+        if request.headers.get("Authorization") == self.bot.config["server"]["auth"]:
+
             data = await request.json()
-            await self._webhook.request("POST", self.bot.config["server"]["webhook"], {"content" : str(data)})
-        
+            user = self.bot.get_user(int(data["user"]))
+            if user is None:
+                user = data["user"]
+
+            embed = discord.Embed(
+                title="Somebody has voted!",
+                description=f"Thanks {user.mention} for voting for me!"
+            )
+
+            await self._webhook.request("POST", self.bot.config["server"]["webhook"], {"embed" : embed.to_dict()})
+
 
 
 

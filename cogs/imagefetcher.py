@@ -5,31 +5,26 @@ import logging
 import random
 from discord.ext import commands
 from collections import Counter, deque
-from hmmm.cogs.handler import DM_MESSAGE, GUILD_MESSAGE
-from hmmm.objects import Post, SubredditNotFound, UnhandledStatusCode
+from cogs.handler import DM_MESSAGE, GUILD_MESSAGE
+from objects import Post, SubredditNotFound, UnhandledStatusCode
 
 log = logging.getLogger(__name__)
 accepted_extensions = [
-    ".png", 
-    ".jpg", 
+    ".png",
+    ".jpg",
     ".jpeg",
-    ".gif", 
-    ".gifv", 
+    ".gif",
+    ".gifv",
     ".webm",
-    ".mp4", 
+    ".mp4",
     ".mp3"
 ]
 
 
 class SubredditHandler:
     def __init__(self, bot, maxlen: int = 500):
-        self.history = {
-            # subreddit: []
-        }
-        self.cache = {
-            # subreddit : a cache of json objects from each HTTP Request.
-        }
-        # a JSON object from a HTTP request, it will be changed frequently.
+        self.history = {}
+        self.cache = {}
         self.maxlen = maxlen
         self.bot = bot
 
@@ -48,10 +43,10 @@ class SubredditHandler:
         return data
 
     async def get_post(self, subreddit):
-        
+
         if not self.cache.get(subreddit):
             self.cache[subreddit] = list()
-        
+
         if not self.history.get(subreddit):
             self.history[subreddit] = deque(maxlen=self.maxlen)
 
@@ -86,7 +81,7 @@ class SubredditHandler:
                                 continue
                             if any(c.url == url for c in self.history.get(subreddit, [])):
                                 continue
-                            
+
                             kls = Post(
                                 title=obj["data"]["title"],
                                 url=url,
@@ -174,7 +169,7 @@ class ImageFetcher(commands.Cog):
             embed.description += f"\n**{type.title()}**:\n"
             for sub, count in result[type].items():
                 embed.description += f"__r/{sub}__: {count}\n"
-            
+
         await ctx.send(embed=embed)
 
 

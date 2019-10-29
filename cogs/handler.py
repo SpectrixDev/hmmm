@@ -18,8 +18,8 @@ GUILD_MESSAGE = """
 COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id}   NAME: {ctx.author}
 CHANNEL:    ID: {ctx.channel.id}   NAME: {ctx.channel}
-GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count} 
-INVOCATION: {ctx.message.content}     
+GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count}
+INVOCATION: {ctx.message.content}
 ERROR:
 {error}
 """
@@ -27,16 +27,16 @@ ERROR:
 DM_MESSAGE = """
 COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id} NAME: {ctx.author}
-INVOCATION: {ctx.message.clean_content}     
+INVOCATION: {ctx.message.clean_content}
 
-ERROR: 
+ERROR:
 {error}
 """
 
 COMMAND_MESSAGE = """
 COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id} NAME: {ctx.author}
-INVOCATION: {ctx.message.clean_content}     
+INVOCATION: {ctx.message.clean_content}
 """
 
 
@@ -44,13 +44,13 @@ GUILD_COMMAND_MESSAGE = """
 COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id}   NAME: {ctx.author}
 CHANNEL:    ID: {ctx.channel.id}   NAME: {ctx.channel}
-GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count} 
-INVOCATION: {ctx.message.clean_content}     
+GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count}
+INVOCATION: {ctx.message.clean_content}
 """
 
 
 GUILD_T_MESSAGE = """
-{5} guild 
+{5} guild
 GUILD: NAME {0}       ID: {0.id}
 OWNER: NAME {0.owner} ID: {0.owner.id}
 MEMBER COUNT: ALL {1} BOTS: {3} HUMANS: {4}
@@ -61,7 +61,7 @@ class EventHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.webhook = discord.AsyncWebhookAdapter(self.bot.session)
-    
+
 
 
     async def webhook_log(self, message):
@@ -70,9 +70,9 @@ class EventHandler(commands.Cog):
                 await self.webhook.request("POST", self.bot.config.get("webhook_url"), {"content" : message})
             except discord.NotFound:
                 pass
-            
-        
-    
+
+
+
     @Cog.listener()
     async def on_guild_join(self, guild):
         await self.bot.update()
@@ -85,7 +85,7 @@ class EventHandler(commands.Cog):
             "content" : "```fix\n" + GUILD_T_MESSAGE.format(guild, ALL, BOTS, HUMANS, 'Joined') + "\n```"
         }
         await self.webhook_log(payload)
-        
+
         if guild.system_channel and guild.system_channel.permissions_for(guild.me).send_messages:
             embed = discord.Embed(color=discord.Color(value=0x36393e))
             embed.set_author(name="Confused? You should be, this bot makes no sense. Take this, it might help:")
@@ -99,7 +99,7 @@ class EventHandler(commands.Cog):
 
     @Cog.listener()
     async def on_guild_remove(self, guild):
-        
+
         BOT_COUNT = sum(1 for x in guild.members if x.bot)
         HUMAN_COUNT = sum(1 for x in guild.members if not x.bot)
         MEMBER_COUNT = guild.member_count
@@ -107,7 +107,7 @@ class EventHandler(commands.Cog):
         MESSAGE = GUILD_T_MESSAGE.format(guild, MEMBER_COUNT, BOT_COUNT, HUMAN_COUNT,'Lefted')
         payload = {
             "content" : "```fix\n" + MESSAGE + "\n```"
-        } 
+        }
         await self.webhook_log(payload)
         await self.bot.update()
 
@@ -119,11 +119,11 @@ class EventHandler(commands.Cog):
             MESSAGE = COMMAND_MESSAGE.format(ctx=ctx)
         self.bot.command_usage[ctx.command.qualified_name] += 1
         log.info(MESSAGE)
-        
+
 
     @Cog.listener()
     async def on_command_error(self, ctx, error):
-        
+
         if hasattr(ctx.command, 'on_error'):
             return
 
@@ -131,35 +131,27 @@ class EventHandler(commands.Cog):
 
         ignored = (
             commands.UserInputError,
-            commands.CommandNotFound
+            commands.CommandNotFound,
+            commands.MissingPermissions,
+            commands.BotMissingPermissions
         )
-        
-        if isinstance(error, ignored): 
+
+        if isinstance(error, ignored):
             return
 
-        elif isinstance(error, commands.NoPrivateMessage):
-            try:
-                return await ctx.send(f'**:no_entry: `{ctx.command}` can not be used in Private Messages.**')
-            except:
-                pass
 
         elif isinstance(error, commands.NSFWChannelRequired):
             # https://discordpy.readthedocs.io/en/latest/ext/commands/api.html#discord.ext.commands.is_nsfw
-            return await ctx.send("**:no_entry: This post can only be seen in a NSFW channel, as the image could be weird, dark, funny, or __disgusting...__ I can't always stop the bad stuff.**")
-
-            
+            return await ctx.send("You can only use this command in a NSFW only channel!")
 
         if ctx.guild:
-            payload = GUILD_MESSAGE.format(ctx=ctx, error=error)            
-            
-        else:
-            payload = DM_MESSAGE.format(ctx=ctx, error=error) 
-            
+            payload = GUILD_MESSAGE.format(ctx=ctx, error=error)
 
-        
-        await self.webhook_log(payload)
+        else:
+            payload = DM_MESSAGE.format(ctx=ctx, error=error)
+
         log.error(payload)
-        await ctx.send("Seems like an unhandled error has occured, my developers has been notified!")
+        await ctx.send("Seems like an unhandled error has occured, my developer has been notified!")
 
 def setup(bot):
     bot.add_cog(EventHandler(bot))

@@ -1,28 +1,51 @@
-import discord
-import aiohttp
+import os
+import sys
+import zlib
+import asyncio
+import ctypes
 import logging
 import pathlib
-import zlib
+import aiohttp
+import discord
+from objects import LogFormatter
+from collections import Counter
+from datetime import datetime
+from discord.ext import commands
 try:
     import ujson as json
 except ImportError:
     import json
 
-from discord.ext import commands
-from datetime import datetime
-from collections import Counter
-log = logging.getLogger(__name__)
+log = logging.getLogger("hmmm")
+log.setLevel(logging.DEBUG)
+if not os.path.exists("logs"):
+    os.mkdir("logs")
+
+FILENAME = datetime.utcnow().strftime("logs/%Y-%m-%d_%H-%M-%S.log")
+logfile = logging.FileHandler(FILENAME, "w", "utf-8")
+handler = logging.StreamHandler()
+handler.setFormatter(LogFormatter())
+logfile.setFormatter(LogFormatter(use_ansi=False))
+log.handlers = [logfile, handler]
+
+
+if sys.platform == "win32":
+    asyncio.set_event_loop(asyncio.ProactorEventLoop())
+    k32 = ctypes.windll.kernel32
+    k32.SetConsoleMode(k32.GetStdHandle(-11), 7)
+
+
 
 def get_prefix(bot, message):
     return [f"<@{bot.user.id}> ", bot.config.get("prefix")]
 
 
 class Hmmm(commands.AutoShardedBot):
-    def __init__(self, config):
+    def __init__(self, config: dict):
         super().__init__(
             command_prefix=get_prefix,
             case_insensitive=True,
-            description="A bot created for very very weird stuff posted on various subreddits"
+            description="A bot created for very very weird stuff posted on various subreddits!"  # nopep8
         )
         self.remove_command("help")
         self.config = config
@@ -47,22 +70,24 @@ class Hmmm(commands.AutoShardedBot):
         log.info(f"Channel Count: {len(set(self.get_all_channels()))}")
         log.info(f"Guild Count: {len(self.guilds)}")
         log.info(f"Debug Mode: {self.debug_mode}")
-    
+
 
     async def on_socket_raw_receive(self, message):
         data = self._zlib.decompress(message)
         data = json.loads(data)
-        if data.get("t"):
+        if "t" in data:
             self.socketstats[data["t"]] += 1
 
 
 
-    
-    async def on_connect(self):
-        self.session = aiohttp.ClientSession(json_serialize=json.dumps)
-        await self.change_presence(status=discord.Status.dnd, activity=discord.Activity(name="myself load", type=3))   
 
-        extensions = [x.as_posix().replace("/", ".") for x in pathlib.Path("hmmm/cogs").iterdir() if x.is_file() and x.name.endswith(".py")]
+    async def on_connect(self):
+        log.info(f"BOOT @ {FILENAME}")
+        log.info("Connecting to discord...")
+        self.session = aiohttp.ClientSession(json_serialize=json.dumps)
+        await self.change_presence(status=discord.Status.dnd)
+        extensions = [x.as_posix().replace("/", ".") for x in pathlib.Path("cogs").iterdir() if x.is_file()]
+
         extensions.append("jishaku")
 
         for ext in extensions:
@@ -74,43 +99,51 @@ class Hmmm(commands.AutoShardedBot):
                 log.info(f"Extension was already loaded, reloading ({ext})")
                 try:
                     self.reload_extension(ext.replace(".py", ""))
+                    log.info(f"Extension reloaded successfully! ({ext})")
                 except commands.ExtensionFailed:
-                    log.error(f"Extension {ext} failed to load:: ", exc_info=True)
-                
+                    log.error(f"Extension {ext} failed to load", exc_info=True)
             except commands.ExtensionFailed:
                 log.error(f"Extension {ext} failed to load:: ", exc_info=True)
-            
+
             except commands.ExtensionNotFound:
                 log.warning(f"Extension {ext} cannot be found")
-            
+
             except commands.NoEntryPointError:
                 log.warning(f"Extension {ext} has no setup function")
 
-  
-
     async def update(self):
-        activity = discord.Activity(name=f"??help | {len(self.guilds)} guilds.", type=1, url="https://www.twitch.tv/SpectrixYT")
+        activity = discord.Activity(
+            type=1,
+            name=f"{self.config['prefix']}help | {len(self.guilds)} guilds.",
+            url="https://www.twitch.tv/SpectrixYT"
+        )
         await self.change_presence(activity=activity)
 
         if self.config.get("dbl_token") and not self.debug_mode:
-            
-            payload = {"server_count" : len(self.guilds)}
-            headers = {"Authorization": self.config["dbl_token"] }
-
-            async with self.session.post(f"https://top.gg/api/bots/{self.user.id}/stats", json=payload, headers=headers) as resp:
+            payload = {"server_count": len(self.guilds)}
+            headers = {"Authorization": self.config["dbl_token"]}
+            url = f"https://top.gg/api/bots/{self.user.id}/stats"
+            async with self.session.post(url, json=payload, headers=headers) as resp:  # nopep8
                 data = await resp.json()
                 if resp.status == 200:
                     log.info(f"Recieved 200 OK response, {data}")
                 else:
-                    log.warning(f"Did not get a OK response: {resp.method} {resp._url} {resp.status} {data}")
+                    message = "Recieved {0.method} {0._url} {0.status} {1}"
+                    log.warning(message.format(resp, data))
 
     async def logout(self):
         log.debug("logout() got called, logging out and cleaning up tasks")
         try:
-            
             await self.session.close()
-        except:
-            #TODO: find what exception is raised when the session was already closed, cause too lazy
+        except (RuntimeError, AttributeError):
             pass
-
         return await super().logout()
+
+
+
+
+if __name__ == "__main__":
+    with open("config.json") as f:
+        config = json.load(f)
+    bot = Hmmm(config=config)
+    bot.run(config["bot_token"])
