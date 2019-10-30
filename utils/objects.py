@@ -1,29 +1,13 @@
 from logging import Formatter, LogRecord
-from discord.ext.commands import Context, BotMissingPermissions, Command, Group
 
-
-class HmmException(Exception):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-class SubredditNotFound(HmmException):
-    def __init__(self, subreddit: str, status_code: int = 404):
-        self.subreddit = subreddit
-        message = "Cannot find r/{0}, received {1} status code"
-        super().__init__(message.format(subreddit, status_code))
-
-class UnhandledStatusCode(HmmException):
-    def __init__(self, status_code: int, url: str, reason: str):
-        self.status_code = status_code
-        self.url = url
-        self.reason = reason
-        super().__init__("%d %s" % (status_code, reason))
 
 class Post:
     def __init__(self, title: str, url: str, is_nsfw: bool = False):
         self.title = title
         self.url = url
         self.nsfw = is_nsfw
+        self.guild_ids = set()
+
 
     def __repr__(self):
         return "<Post title={0.title} is_nsfw={0.nsfw} url={0.url}>".format(self)
@@ -33,6 +17,11 @@ class Post:
 
     def __bool__(self):
         return self.nsfw
+
+
+
+
+
 
 class LogFormatter(Formatter):
     def __init__(self, use_ansi: bool=True):
@@ -65,12 +54,3 @@ class LogFormatter(Formatter):
         if r.levelname in self.codes and self.use_ansi:
             r.msg = self.codes[r.levelname] + str(r.msg) + self.codes["RESET"]
         return super().format(r)
-
-
-class CustomContext(Context):
-
-    async def send(self, *args, **kwargs):
-        if not self.guild.me.permissions_in(self.channel).send_messages:
-            raise BotMissingPermissions(["send_messages"])
-
-        return await super().send(*args, **kwargs)

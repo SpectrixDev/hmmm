@@ -1,11 +1,8 @@
-import asyncio
-import random
-import time
 import logging
-import aiohttp
-import discord
 import platform
 from datetime import datetime
+
+import discord
 from discord.ext import commands
 
 log = logging.getLogger(__name__)
@@ -30,7 +27,7 @@ class General(commands.Cog):
 
     @commands.command(aliases=['support', 'guild'])
     async def server(self, ctx):
-         await ctx.send(f"{ctx.author.mention} <https://discord.gg/Kghqehz>\nHere's my support server")
+        await ctx.send("<https://discord.gg/Kghqehz>\nHere's my support server")
 
 
     @commands.command()
@@ -50,7 +47,7 @@ class General(commands.Cog):
         days, hours = divmod(hours, 24)
         uptime = f"{days} days, {hours} hours, {minutes} minutes, and {seconds} seconds"
         os = platform.platform()
-        cmd_usage = sum(v for k,v in self.bot.command_usage.items())
+        cmd_usage = sum(v for k, v in self.bot.command_usage.items())
 
         description = [
             self.bot.description + f", {cmd_usage:,d} commands has been executed since last boot\n",
