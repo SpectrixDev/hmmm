@@ -60,17 +60,7 @@ CREATED_AT: {0.created_at}
 class EventHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.webhook = discord.AsyncWebhookAdapter(self.bot.session)
-
-
-
-    async def webhook_log(self, message):
-        if self.bot.config.get("webhook_url"):
-            try:
-                await self.webhook.request("POST", self.bot.config.get("webhook_url"), {"content" : message})
-            except discord.NotFound:
-                pass
-
+        self.webhook = discord.Webhook.from_url(bot.config["webhook_url"], adapter=discord.AsyncWebhookAdapter(self.bot.session))
 
 
     @Cog.listener()
@@ -81,10 +71,8 @@ class EventHandler(commands.Cog):
         HUMANS = sum(1 for x in guild.members if not x.bot)
         ALL = guild.member_count
 
-        payload = {
-            "content" : "```fix\n" + GUILD_T_MESSAGE.format(guild, ALL, BOTS, HUMANS, 'Joined') + "\n```"
-        }
-        await self.webhook_log(payload)
+        payload = GUILD_T_MESSAGE.format(guild, ALL, BOTS, HUMANS, 'Joined')
+        await self.webhook.send(payload)
 
         if guild.system_channel and guild.system_channel.permissions_for(guild.me).send_messages:
             embed = discord.Embed(color=discord.Color(value=0x36393e))
@@ -105,10 +93,7 @@ class EventHandler(commands.Cog):
         MEMBER_COUNT = guild.member_count
 
         MESSAGE = GUILD_T_MESSAGE.format(guild, MEMBER_COUNT, BOT_COUNT, HUMAN_COUNT,'Lefted')
-        payload = {
-            "content" : "```fix\n" + MESSAGE + "\n```"
-        }
-        await self.webhook_log(payload)
+        await self.webhook.send(MESSAGE)
         await self.bot.update()
 
     @Cog.listener()
@@ -139,7 +124,6 @@ class EventHandler(commands.Cog):
         if isinstance(error, ignored):
             return
 
-
         elif isinstance(error, commands.NSFWChannelRequired):
             # https://discordpy.readthedocs.io/en/latest/ext/commands/api.html#discord.ext.commands.is_nsfw
             return await ctx.send("You can only use this command in a NSFW only channel!")
@@ -151,6 +135,7 @@ class EventHandler(commands.Cog):
             payload = DM_MESSAGE.format(ctx=ctx, error=error)
 
         log.error(payload)
+        await self.webhook.send(f"```fix\n{error}\n```")
         await ctx.send("Seems like an unhandled error has occured, my developer has been notified!")
 
 def setup(bot):

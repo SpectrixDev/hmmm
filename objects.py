@@ -2,37 +2,9 @@ from logging import Formatter, LogRecord
 from discord.ext.commands import Context, BotMissingPermissions, Command, Group
 
 
-
-# in design
-
-class HelpCommand:
-    def __init__(self,
-        context: Context,
-        verify_checks: bool=True,
-        line_height_span: int=20
-    ):
-        self.author = context.author
-        self.lhs = line_height_span
-        self.emojis = {
-            "GROUP" : "\U0001f4c2",
-            "COMMAND" : "\U0001f449",
-            "DISABLED" : "\U0001f512"
-        }
-        self.verify_checks = verify_checks
-        self.bot = context.bot
-
-    def generate_command_line(self, command):
-        if not isinstance(command, (Command, Group)):
-            raise TypeError("Expected Command or Group, got {0.__class__.__name__}".format(command))
-        # /shrug
-
-
-
-
 class HmmException(Exception):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
 
 class SubredditNotFound(HmmException):
     def __init__(self, subreddit: str, status_code: int = 404):
@@ -93,9 +65,6 @@ class LogFormatter(Formatter):
         if r.levelname in self.codes and self.use_ansi:
             r.msg = self.codes[r.levelname] + str(r.msg) + self.codes["RESET"]
         return super().format(r)
-
-
-
 
 
 class CustomContext(Context):

@@ -123,11 +123,8 @@ class Hmmm(commands.AutoShardedBot):
             url = f"https://top.gg/api/bots/{self.user.id}/stats"
             async with self.session.post(url, json=payload, headers=headers) as resp:  # nopep8
                 data = await resp.json()
-                if resp.status == 200:
-                    log.info(f"Recieved 200 OK response, {data}")
-                else:
-                    message = "Recieved {0.method} {0._url} {0.status} {1}"
-                    log.warning(message.format(resp, data))
+                message = "Recieved {0.method} {0._url} {0.status} {1}"
+                log.info(message.format(resp, data))
 
     async def logout(self):
         log.debug("logout() got called, logging out and cleaning up tasks")

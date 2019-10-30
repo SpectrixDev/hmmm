@@ -116,6 +116,13 @@ class SubredditHandler:
         return val
 
 
+class WIPSubredditFetcher:
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        self.posts = []
+        
+
+
 class ImageFetcher(commands.Cog, name="Reddit commands"):
     def __init__(self, bot):
         self.bot = bot
