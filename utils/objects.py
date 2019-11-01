@@ -2,15 +2,16 @@ from logging import Formatter, LogRecord
 
 
 class Post:
-    def __init__(self, title: str, url: str, is_nsfw: bool = False):
+    def __init__(self, title: str, url: str, subreddit: str, is_nsfw: bool = False):
         self.title = title
         self.url = url
+        self.subreddit = subreddit
         self.nsfw = is_nsfw
         self.guild_ids = set()
 
 
     def __repr__(self):
-        return "<Post title={0.title} is_nsfw={0.nsfw} url={0.url}>".format(self)
+        return "<Post subreddit='{0.subreddit}' title='{0.title}' is_nsfw={0.nsfw} url='{0.url}'>".format(self)
 
     def __str__(self):
         return self.url

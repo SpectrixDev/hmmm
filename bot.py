@@ -1,7 +1,6 @@
 import logging
 import os
 import pathlib
-import zlib
 from collections import Counter
 from datetime import datetime
 
@@ -55,12 +54,12 @@ class Hmmm(commands.AutoShardedBot):
         )
         self.config = config
         self.owners = set(config.get("owners", {}))
-        self.uptime = datetime.utcnow()
+        self.uptime = datetime.now()
         self.debug_mode = config.get("debug_mode", True)
-        self._zlib = zlib.decompressobj()
-        self.socketstats = Counter()
         self.command_usage = Counter()
         self.db = None
+        self.settings = {}
+
 
 
     async def is_owner(self, user):
@@ -78,12 +77,6 @@ class Hmmm(commands.AutoShardedBot):
         log.info("Debug Mode: %s", str(self.debug_mode))
 
 
-    async def on_socket_raw_receive(self, message):
-        data = self._zlib.decompress(message)
-        data = json.loads(data)
-        if "t" in data:
-            self.socketstats[data["t"]] += 1
-
     async def get_context(self, message, * , cls=commands.Context):
         return await super().get_context(message, cls=CustomContext)
 
@@ -92,11 +85,18 @@ class Hmmm(commands.AutoShardedBot):
     async def on_connect(self):
         log.info("BOOT @ %s", FILENAME)
         log.info("Connecting to discord...")
+
         self.session = aiohttp.ClientSession(json_serialize=json.dumps)
+        adapter = discord.AsyncWebhookAdapter(self.session)
+        self.webhook = discord.Webhook.from_url(self.config["webhook_url"], adapter=adapter)
+
         try:
             self.db = await asyncpg.create_pool(**self.config["database"])
+            with open("schema.sql") as f:
+                await self.db.execute(f.read())
+                log.info("Executed SQL scheme")
         except ConnectionRefusedError:
-            log.critical("Connecting to database was refused! Killing bot")
+            log.critical("db connection refused, stopping bot")
             await self.logout()
             return
 
@@ -130,11 +130,13 @@ class Hmmm(commands.AutoShardedBot):
         if self.config.get("dbl_token") and not self.debug_mode:
             payload = {"server_count": len(self.guilds)}
             headers = {"Authorization": self.config["dbl_token"]}
-            
             url = "https://top.gg/api/bots/%d/stats" % self.user.id
             async with self.session.post(url, json=payload, headers=headers) as resp:  # nopep8
-                data = await resp.json()
-                log.info("Recieved %s %s %d %s", resp.method, resp._url, resp.status, data)
+                try:
+                    data = await resp.json()
+                    log.info("Recieved %s %s %d %s", resp.method, resp._url, resp.status, data)
+                except (TypeError, ValueError):
+                    log.info("Recieved %s %s %d", resp.method, resp._url, resp.status)
 
 
     async def logout(self):
@@ -151,7 +153,7 @@ class Hmmm(commands.AutoShardedBot):
 
 
 if __name__ == "__main__":
-    with open("config.json") as f:
-        configuration = json.load(f)
+    with open("config.json") as file:
+        configuration = json.load(file)
     hmm = Hmmm(config=configuration)
     hmm.run(configuration["bot_token"])

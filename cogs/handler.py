@@ -1,66 +1,18 @@
-import traceback
 import logging
 import discord
 from discord.ext import commands
-from discord.ext.commands import Cog
+from utils.formats import *  # pylint: disable=wildcard-import
 
 log = logging.getLogger(__name__)
 
 
 
-
-
-GUILD_MESSAGE = """
-COMMAND:    {ctx.command}
-AUTHOR:     ID: {ctx.author.id}   NAME: {ctx.author}
-CHANNEL:    ID: {ctx.channel.id}   NAME: {ctx.channel}
-GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count}
-INVOCATION: {ctx.message.content}
-ERROR:
-{error}
-"""
-
-DM_MESSAGE = """
-COMMAND:    {ctx.command}
-AUTHOR:     ID: {ctx.author.id} NAME: {ctx.author}
-INVOCATION: {ctx.message.clean_content}
-
-ERROR:
-{error}
-"""
-
-COMMAND_MESSAGE = """
-COMMAND:    {ctx.command}
-AUTHOR:     ID: {ctx.author.id} NAME: {ctx.author}
-INVOCATION: {ctx.message.clean_content}
-"""
-
-
-GUILD_COMMAND_MESSAGE = """
-COMMAND:    {ctx.command}
-AUTHOR:     ID: {ctx.author.id}   NAME: {ctx.author}
-CHANNEL:    ID: {ctx.channel.id}   NAME: {ctx.channel}
-GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count}
-INVOCATION: {ctx.message.clean_content}
-"""
-
-
-GUILD_T_MESSAGE = """
-{5} guild
-GUILD: NAME {0}       ID: {0.id}
-OWNER: NAME {0.owner} ID: {0.owner.id}
-MEMBER COUNT: ALL {1} BOTS: {3} HUMANS: {4}
-CREATED_AT: {0.created_at}
-"""
-
 class EventHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.adapter = discord.AsyncWebhookAdapter(self.bot.session)
-        self.webhook = discord.Webhook.from_url(bot.config["webhook_url"], adapter=self.adapter)
+        self.webhook = bot.webhook
 
-
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_guild_join(self, guild):
         await self.bot.update()
 
@@ -68,32 +20,34 @@ class EventHandler(commands.Cog):
         humans = sum(1 for x in guild.members if not x.bot)
         members = guild.member_count
 
-        payload = GUILD_T_MESSAGE.format(guild, members, bots, humans, 'Joined')
-        await self.webhook.send(payload)
+        message = GUILD_STATUS_MESSAGE.format("Joined", guild, members, bots, humans)
+        log.info(message)
+        await self.webhook.send("```\n%s\n```" % message)
 
         if guild.system_channel:
+            prefix = self.bot.config['prefix']
             embed = discord.Embed(color=discord.Color(value=0x36393e))
             embed.set_author(name="Confused? You should be, this bot makes no sense. Take this, it might help:")
-            embed.add_field(name="Prefix", value=f"`{self.bot.config['prefix']}`, or *mention me.*")
-            embed.add_field(name="Command help", value=f"{self.bot.config['prefix']}help")
+            embed.add_field(name="Prefix", value="`%s`, or *mention me.*" % prefix)
+            embed.add_field(name="Command help", value="%shelp" % prefix)
             embed.add_field(name="Support Server", value="[Join, it's fun here](https://discord.gg/Kghqehz)")
             embed.add_field(name="Upvote", value="[Click here](https://top.gg/bot/%d/vote)" % self.bot.user.id)
             embed.set_thumbnail(url=str(self.bot.user.avatar_url))
             embed.set_footer(text=f"Thanks to you, this monstrosity of a bot is now on {len(self.bot.guilds):,d} servers!", icon_url="https://media.giphy.com/media/ruw1bRYN0IXNS/giphy.gif")
             await guild.system_channel.send(content="**Hello gamers! Thanks for inviting me! :wave: **", embed=embed)
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_guild_remove(self, guild):
 
-        BOT_COUNT = sum(1 for x in guild.members if x.bot)
-        HUMAN_COUNT = sum(1 for x in guild.members if not x.bot)
-        MEMBER_COUNT = guild.member_count
-
-        MESSAGE = GUILD_T_MESSAGE.format(guild, MEMBER_COUNT, BOT_COUNT, HUMAN_COUNT, 'Lefted')
-        await self.webhook.send(MESSAGE)
+        bot_count = sum(1 for x in guild.members if x.bot)
+        human_count = sum(1 for x in guild.members if not x.bot)
+        member_count = guild.member_count
+        message = GUILD_STATUS_MESSAGE.format("Lefted", guild, member_count, bot_count, human_count)
+        log.info(message)
+        await self.webhook.send("```\n%s\n```" % message)
         await self.bot.update()
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_command_completion(self, ctx):
         if ctx.guild:
             MESSAGE = GUILD_COMMAND_MESSAGE.format(ctx=ctx)
@@ -103,7 +57,7 @@ class EventHandler(commands.Cog):
         log.info(MESSAGE)
 
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
 
         if hasattr(ctx.command, 'on_error'):
@@ -121,11 +75,10 @@ class EventHandler(commands.Cog):
         if isinstance(error, ignored):
             return
 
-        elif isinstance(error, commands.NSFWChannelRequired):
+        if isinstance(error, commands.NSFWChannelRequired):
             # https://discordpy.readthedocs.io/en/latest/ext/commands/api.html#discord.ext.commands.is_nsfw
             return await ctx.send("You can only use this command in a NSFW only channel!")
 
-        error = traceback.format_exc()
         if ctx.guild:
             payload = GUILD_MESSAGE.format(ctx=ctx, error=error)
 
@@ -133,7 +86,7 @@ class EventHandler(commands.Cog):
             payload = DM_MESSAGE.format(ctx=ctx, error=error)
 
         log.error(payload)
-        await self.webhook.send(f"```fix\n{error}\n```")
+        await self.webhook.send("```fix\n%s\n```" % payload)
         await ctx.send("Seems like an unhandled error has occured, my developer has been notified!")
 
 def setup(bot):
