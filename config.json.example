@@ -1,0 +1,14 @@
+{
+    "owners": [],
+    "bot_token": "discord bot token",
+    "dbl_token": null,
+    "webhook_url": "discord webhook for logging",
+    "database": {
+        "host": "$HOST",
+        "user": "$USER",
+        "database": "$DB",
+        "password": "$PASSWORD"
+    },
+    "prefix": ".",
+    "debug_mode": true
+}

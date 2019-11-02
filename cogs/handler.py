@@ -15,6 +15,7 @@ class EventHandler(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
         await self.bot.update()
+        
 
         bots = sum(1 for x in guild.members if x.bot)
         humans = sum(1 for x in guild.members if not x.bot)

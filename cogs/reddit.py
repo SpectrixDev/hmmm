@@ -72,38 +72,55 @@ class Reddit(commands.Cog, name="Reddit commands"):
     def __init__(self, bot):
         self.bot = bot
         self.handler = SubredditHandler(self.bot)
-        self._commands = {
+        
+        cmds = {
             "hmmm" : ["hm", "hmm", "hmmmm", "hmmmmmm"],
             "cursed" : ["cursedimage", "cursedimages"],
             "ooer" : [],
             "surrealmeme" : ["surreal", "surrealmemes"],
             "imsorry" : ["imsorryjon", "imsorryjohn"]
         }
-        for sub, alias in self._commands.items():
+        for sub, alias in cmds.items():
             cmdobj = commands.Command(
                 func=self._handler,
                 name=sub,
                 aliases=alias,
-                cog=self
+                cog=self,
+                help=f"{sub}"
             )
             self.bot.add_command(cmdobj)
 
+    
+    async def cog_check(self, ctx):
+        return ctx.guild is not None
+    
+    @commands.has_permissions(manage_guild=True)
+    @commands.command(
+        name="toggle-nsfw", 
+        help="A command to turn on or off the requirement of reddit commands being executed in only NSFW channels"
+    )
+    async def toggle_nsfw(self, ctx):
+        toggled_state = await self.bot.db.fetchval("SELECT toggle_nsfw($1);", ctx.guild.id)
+        if toggled_state == 1:
+            await ctx.send(":unlock: The NSFW channel requirement for reddit commands has been removed")
+            self.bot.nsfw_required.discard(ctx.guild.id)
+        else:
+            await ctx.send(":lock: The NSFW channel requirement for reddit commands has been enabled")
+            self.bot.nsfw_required.add(ctx.guild.id)
 
     async def _handler(self, ctx):
-        if not ctx.channel.is_nsfw() and (ctx.bot.settings.get(ctx.guild.id) is None or ctx.bot.settings[ctx.guild.id]["allow_nsfw"] is False):
+        if not ctx.channel.is_nsfw() and ctx.guild.id in self.bot.nsfw_required:
             raise commands.NSFWChannelRequired(ctx.channel)
 
         try:
             post = await self.handler.get_post(ctx.guild.id, ctx.command.qualified_name)
-            print(post)
-            await ctx.send(f"**{post.title}**\n{post.url}")
+            await ctx.send("**{0.title}**\n{0.url}".format(post))
+
         except SubredditNotFound as error:
             await ctx.send(error)
         except UnhandledStatusCode as error:
             await ctx.send(error)
             
 
-
 def setup(bot):
     bot.add_cog(Reddit(bot))
-    

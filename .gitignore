@@ -3,7 +3,7 @@
 *.json
 *.vs
 *.txt
-*config*
+config.json
 
 logs/
 .vscode/

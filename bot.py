@@ -58,7 +58,7 @@ class Hmmm(commands.AutoShardedBot):
         self.debug_mode = config.get("debug_mode", True)
         self.command_usage = Counter()
         self.db = None
-        self.settings = {}
+        self.nsfw_required = set()
 
 
 
@@ -101,17 +101,17 @@ class Hmmm(commands.AutoShardedBot):
             return
 
 
-        extensions = [x.as_posix().replace("/", ".") for x in pathlib.Path("cogs").iterdir() if x.is_file()]
+        extensions = [x.as_posix().replace("/", ".").replace(".py", "") for x in pathlib.Path("cogs").iterdir() if x.is_file()]
 
         extensions.append("jishaku")
 
         for ext in extensions:
             try:
-                self.load_extension(ext.replace(".py", ""))
+                self.load_extension(ext)
                 log.info("Loaded extension: %s", ext)
 
             except commands.ExtensionFailed:
-                log.error("Extension %s failed to load:: ", ext, exc_info=True)
+                log.error("Extension %s failed to load: ", ext, exc_info=True)
 
             except commands.ExtensionNotFound:
                 log.warning("Extension %s cannot be found", ext)
