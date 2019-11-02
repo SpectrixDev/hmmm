@@ -37,14 +37,6 @@ log.handlers = [l, s]
 def get_prefix(bot, _message):
     return [f"<@{bot.user.id}> ", bot.config.get("prefix")]
 
-class CustomContext(commands.Context):
-
-    async def send(self, *args, **kwargs):
-        if not self.guild.me.permissions_in(self.channel).send_messages:
-            raise commands.BotMissingPermissions(["send_messages"])
-
-        return await super().send(*args, **kwargs)
-
 class Hmmm(commands.AutoShardedBot):
     def __init__(self, config: dict):
         super().__init__(
@@ -75,12 +67,6 @@ class Hmmm(commands.AutoShardedBot):
         log.info("Channel Count: %d", len(set(self.get_all_channels())))
         log.info("Guild Count: %d", len(self.guilds))
         log.info("Debug Mode: %s", str(self.debug_mode))
-
-
-    async def get_context(self, message, * , cls=commands.Context):
-        return await super().get_context(message, cls=CustomContext)
-
-
 
     async def on_connect(self):
         log.info("BOOT @ %s", FILENAME)
