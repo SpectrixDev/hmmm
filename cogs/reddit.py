@@ -73,26 +73,34 @@ class Reddit(commands.Cog, name="Reddit commands"):
         self.bot = bot
         self.handler = SubredditHandler(self.bot)
         
-        cmds = {
-            "hmmm" : ["hm", "hmm", "hmmmm", "hmmmmmm"],
-            "cursed" : ["cursedimage", "cursedimages"],
-            "ooer" : [],
-            "surrealmeme" : ["surreal", "surrealmemes"],
-            "imsorry" : ["imsorryjon", "imsorryjohn"]
-        }
-        for sub, alias in cmds.items():
-            cmdobj = commands.Command(
-                func=self._handler,
-                name=sub,
-                aliases=alias,
-                help=f"{sub}"
+        cmds = [
+            {"name" : "hmmm", "aliases" : ["hm", "hmm", "hmmmm", "hmmmmmm"]},
+            {"name" : "cursed", "aliases" : ["cursedimage", "cursedimages"]},
+            {"name" : "ooer", "aliases" : []},
+            {"name" : "surrealmeme", "aliases" : ["surreal", "surrealmemes"]},
+            {"name" : "imsorry", "aliases" : ["imsorryjon", "imsorryjohn"]}
+        ]
+        for row in cmds:
+            command = commands.Command(
+                func=Reddit._sub_handler,
+                name=row["name"],
+                aliases=row["aliases"]
             )
-            cmdobj.cog = self
-            self.bot.add_command(cmdobj)
+            command.cog = self
+            self.bot.add_command(command)
 
-    
+
+    async def _sub_handler(self, ctx):
+        if not ctx.channel.is_nsfw() and ctx.guild.id in self.bot.nsfw_required:
+            raise commands.NSFWChannelRequired(ctx.channel)
+        try:
+            post = await self.handler.get_post(ctx.guild.id, ctx.command.qualified_name)
+            await ctx.send("**{0.title}**\n{0.url}".format(post))
+        except (UnhandledStatusCode, SubredditNotFound) as error:
+            await ctx.send(error)
+           
     async def cog_check(self, ctx):
-        return ctx.guild is not None
+        return ctx.guild is not None    
     
     @commands.has_permissions(manage_guild=True)
     @commands.command(
@@ -107,19 +115,6 @@ class Reddit(commands.Cog, name="Reddit commands"):
         else:
             await ctx.send(":lock: The NSFW channel requirement for reddit commands has been enabled")
             self.bot.nsfw_required.add(ctx.guild.id)
-
-    async def _handler(self, ctx):
-        if not ctx.channel.is_nsfw() and ctx.guild.id in self.bot.nsfw_required:
-            raise commands.NSFWChannelRequired(ctx.channel)
-
-        try:
-            post = await self.handler.get_post(ctx.guild.id, ctx.command.qualified_name)
-            await ctx.send("**{0.title}**\n{0.url}".format(post))
-
-        except SubredditNotFound as error:
-            await ctx.send(error)
-        except UnhandledStatusCode as error:
-            await ctx.send(error)
             
 
 def setup(bot):
