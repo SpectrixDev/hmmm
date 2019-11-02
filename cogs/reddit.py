@@ -57,12 +57,20 @@ class SubredditHandler:
                             is_nsfw=post["data"]["over_18"]
                         )
                         self.posts.append(obj)
+                        log.debug("%s: %r", subreddit, obj)
                     posts = list(filter(lambda a: not guild_id in a.guild_ids and a.subreddit == subreddit, self.posts))
-                    post = random.choice(posts)
+                    log.debug("%s: %d",subreddit, len(posts))
+                    try:
+                        post = random.choice(posts)
+                    except NameError:
+                        post = random.choice(list(filter(lambda a: a.subreddit == subreddit, self.posts)))
+                        
+
                     post.guild_ids.add(guild_id)
                     log.debug("get post: %r", post)
                     return post
         else:
+            log.debug("reached")
             post = random.choice(filtered)
             post.guild_ids.add(guild_id)
             return post
@@ -75,7 +83,7 @@ class Reddit(commands.Cog, name="Reddit commands"):
         
         cmds = [
             {"name" : "hmmm", "aliases" : ["hm", "hmm", "hmmmm", "hmmmmmm"]},
-            {"name" : "cursed", "aliases" : ["cursedimage", "cursedimages"]},
+            {"name" : "cursedimages", "aliases" : ["cursedimage", "cursed"]},
             {"name" : "ooer", "aliases" : []},
             {"name" : "surrealmeme", "aliases" : ["surreal", "surrealmemes"]},
             {"name" : "imsorry", "aliases" : ["imsorryjon", "imsorryjohn"]}
