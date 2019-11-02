@@ -85,9 +85,9 @@ class Reddit(commands.Cog, name="Reddit commands"):
                 func=self._handler,
                 name=sub,
                 aliases=alias,
-                cog=self,
                 help=f"{sub}"
             )
+            cmdobj.cog = self
             self.bot.add_command(cmdobj)
 
     
