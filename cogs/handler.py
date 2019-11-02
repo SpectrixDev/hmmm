@@ -87,7 +87,6 @@ class EventHandler(commands.Cog):
             payload = DM_MESSAGE.format(ctx=ctx, error=error)
 
         log.error(payload)
-        log.debug(dir(payload))
         await self.webhook.send("```fix\n%s\n```" % payload)
         await ctx.send("Seems like an unhandled error has occured, my developer has been notified!")
 

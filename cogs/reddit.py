@@ -59,11 +59,13 @@ class SubredditHandler:
                         self.posts.append(obj)
                         log.debug("%s: %r", subreddit, obj)
                     posts = list(filter(lambda a: not guild_id in a.guild_ids and a.subreddit == subreddit, self.posts))
-                    log.debug("%s: %d",subreddit, len(posts))
+                    log.debug("%s: %d", subreddit, len(posts))
                     try:
                         post = random.choice(posts)
-                    except NameError:
+                        log.debug("success")
+                    except IndexError:
                         post = random.choice(list(filter(lambda a: a.subreddit == subreddit, self.posts)))
+                        log.debug("disregarding if used or not")
                         
 
                     post.guild_ids.add(guild_id)
@@ -92,7 +94,8 @@ class Reddit(commands.Cog, name="Reddit commands"):
             command = commands.Command(
                 func=Reddit._sub_handler,
                 name=row["name"],
-                aliases=row["aliases"]
+                aliases=row["aliases"],
+                help=f"Fetch a post from r/{row['name']}"
             )
             command.cog = self
             self.bot.add_command(command)
