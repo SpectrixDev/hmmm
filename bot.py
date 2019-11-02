@@ -95,6 +95,9 @@ class Hmmm(commands.AutoShardedBot):
             with open("schema.sql") as f:
                 await self.db.execute(f.read())
                 log.info("Executed SQL scheme")
+            
+            for guild in await self.db.fetch("SELECT * FROM nsfw_opted"):
+                self.nsfw_required.add(guild["guild_id"])
         except ConnectionRefusedError:
             log.critical("db connection refused, stopping bot")
             await self.logout()
