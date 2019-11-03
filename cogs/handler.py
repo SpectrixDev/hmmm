@@ -70,7 +70,8 @@ class EventHandler(commands.Cog):
             commands.UserInputError,
             commands.CommandNotFound,
             commands.MissingPermissions,
-            commands.BotMissingPermissions
+            commands.BotMissingPermissions,
+            commands.NotOwner
         )
 
         if isinstance(error, ignored):
@@ -88,7 +89,6 @@ class EventHandler(commands.Cog):
 
         log.error(payload)
         await self.webhook.send("```fix\n%s\n```" % payload)
-        await ctx.send("Seems like an unhandled error has occured, my developer has been notified!")
-
+        
 def setup(bot):
     bot.add_cog(EventHandler(bot))
