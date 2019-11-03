@@ -1,12 +1,9 @@
-# why are you reading the stupid gitignore rather just star the repo smh
-
-*.json
-*.vs
-*.txt
-config.json
-
+# logs
 logs/
-.vscode/
+*.log
+
+# configuration
+.env
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

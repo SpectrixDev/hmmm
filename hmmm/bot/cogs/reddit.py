@@ -18,14 +18,15 @@ accepted_extensions = [
     ".mp3"
 ]
 
+
 class SubredditHandler:
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.posts = []
 
-
     async def get_post(self, guild_id: int, subreddit: str):
-        filtered = list(filter(lambda a: not guild_id in a.guild_ids and a.subreddit == subreddit, self.posts))
+        filtered = list(filter(
+            lambda a: not guild_id in a.guild_ids and a.subreddit == subreddit, self.posts))
         log.debug(len(filtered))
         if len(filtered) == 0:
             attempts = 0
@@ -33,17 +34,19 @@ class SubredditHandler:
                 attempts += 1
                 async with self.bot.session.get("https://reddit.com/r/%s/new.json?sort=top&limit=500" % subreddit) as resp:
                     if resp.status == 429:
-                        log.warning("Site has responded with a %d %s", resp.status, resp.reason)
+                        log.warning("Site has responded with a %d %s",
+                                    resp.status, resp.reason)
                         await asyncio.sleep(10)
                         continue
                     if resp.status != 200:
-                        raise UnhandledStatusCode(resp.status, resp._url, resp.reason)
+                        raise UnhandledStatusCode(
+                            resp.status, resp._url, resp.reason)
 
                     data = await resp.json()
 
                     if len(data["data"]["children"]) == 0:
                         raise SubredditNotFound(subreddit, resp.status)
-                    
+
                     for post in data["data"]["children"]:
                         if not "url" in post["data"] or any(post["data"]["url"] == x.url for x in self.posts):
                             continue
@@ -58,15 +61,16 @@ class SubredditHandler:
                         )
                         self.posts.append(obj)
                         log.debug("%s: %r", subreddit, obj)
-                    posts = list(filter(lambda a: not guild_id in a.guild_ids and a.subreddit == subreddit, self.posts))
+                    posts = list(filter(
+                        lambda a: not guild_id in a.guild_ids and a.subreddit == subreddit, self.posts))
                     log.debug("%s: %d", subreddit, len(posts))
                     try:
                         post = random.choice(posts)
                         log.debug("success")
                     except IndexError:
-                        post = random.choice(list(filter(lambda a: a.subreddit == subreddit, self.posts)))
+                        post = random.choice(
+                            list(filter(lambda a: a.subreddit == subreddit, self.posts)))
                         log.debug("disregarding if used or not")
-                        
 
                     post.guild_ids.add(guild_id)
                     log.debug("get post: %r", post)
@@ -82,13 +86,13 @@ class Reddit(commands.Cog, name="Reddit commands"):
     def __init__(self, bot):
         self.bot = bot
         self.handler = SubredditHandler(self.bot)
-        
+
         cmds = [
-            {"name" : "hmmm", "aliases" : ["hm", "hmm", "hmmmm", "hmmmmmm"]},
-            {"name" : "cursedimages", "aliases" : ["cursedimage", "cursed"]},
-            {"name" : "ooer", "aliases" : []},
-            {"name" : "surrealmeme", "aliases" : ["surreal", "surrealmemes"]},
-            {"name" : "imsorry", "aliases" : ["imsorryjon", "imsorryjohn"]}
+            {"name": "hmmm", "aliases": ["hm", "hmm", "hmmmm", "hmmmmmm"]},
+            {"name": "cursedimages", "aliases": ["cursedimage", "cursed"]},
+            {"name": "ooer", "aliases": []},
+            {"name": "surrealmeme", "aliases": ["surreal", "surrealmemes"]},
+            {"name": "imsorry", "aliases": ["imsorryjon", "imsorryjohn"]}
         ]
         for row in cmds:
             command = commands.Command(
@@ -100,7 +104,6 @@ class Reddit(commands.Cog, name="Reddit commands"):
             command.cog = self
             self.bot.add_command(command)
 
-
     async def _sub_handler(self, ctx):
         if not ctx.channel.is_nsfw() and ctx.guild.id in self.bot.nsfw_required:
             raise commands.NSFWChannelRequired(ctx.channel)
@@ -109,13 +112,13 @@ class Reddit(commands.Cog, name="Reddit commands"):
             await ctx.send("**{0.title}**\n{0.url}".format(post))
         except (UnhandledStatusCode, SubredditNotFound) as error:
             await ctx.send(error)
-           
+
     async def cog_check(self, ctx):
-        return ctx.guild is not None    
-    
+        return ctx.guild is not None
+
     @commands.has_permissions(manage_guild=True)
     @commands.command(
-        name="toggle-nsfw", 
+        name="toggle-nsfw",
         help="A command to turn on or off the requirement of reddit commands being executed in only NSFW channels"
     )
     async def toggle_nsfw(self, ctx):
@@ -126,7 +129,7 @@ class Reddit(commands.Cog, name="Reddit commands"):
         else:
             await ctx.send(":lock: The NSFW channel requirement for reddit commands has been enabled")
             self.bot.nsfw_required.add(ctx.guild.id)
-            
+
 
 def setup(bot):
     bot.add_cog(Reddit(bot))

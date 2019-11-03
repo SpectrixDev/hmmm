@@ -9,7 +9,6 @@ class Post:
         self.nsfw = is_nsfw
         self.guild_ids = set()
 
-
     def __repr__(self):
         return "<Post subreddit='{0.subreddit}' title='{0.title}' is_nsfw={0.nsfw} url='{0.url}'>".format(self)
 
@@ -20,12 +19,8 @@ class Post:
         return self.nsfw
 
 
-
-
-
-
 class LogFormatter(Formatter):
-    def __init__(self, use_ansi: bool=True):
+    def __init__(self, use_ansi: bool = True):
         if use_ansi:
             super().__init__(
                 fmt="\033[1;30m[{asctime} {name}/{levelname}]: {message}",
@@ -46,7 +41,7 @@ class LogFormatter(Formatter):
             "ERROR": "\033[31m",
             "DEBUG": "\033[32;1m",
             "RESET": "\033[0m",
-            "INFO" : "\033[1;32m"
+            "INFO": "\033[1;32m"
         }
 
     def format(self, r: LogRecord):

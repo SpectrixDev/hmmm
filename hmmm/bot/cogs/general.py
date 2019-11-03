@@ -8,6 +8,7 @@ from discord.ext import commands
 
 log = logging.getLogger(__name__)
 
+
 class General(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -24,20 +25,17 @@ class General(commands.Cog):
         days, hours = divmod(hours, 24)
         await ctx.send(f"{days}d, {hours}h, {minutes}m, {seconds}s")
 
-
-
     @commands.command(aliases=['support', 'guild'])
     async def server(self, ctx):
         await ctx.send("<https://discord.gg/Kghqehz>\nHere's my support server")
 
-
     @commands.command()
     async def invite(self, ctx):
         url = discord.utils.oauth_url(self.bot.user.id, discord.Permissions(8))
-        embed = discord.Embed(title=str(self.bot.user), color=discord.Color.dark_blue())
+        embed = discord.Embed(title=str(self.bot.user),
+                              color=discord.Color.dark_blue())
         embed.description = f"[Click here]({url}) to invite {self.bot.user.name} to your guild!"
         await ctx.send(embed=embed)
-
 
     @commands.command()
     async def info(self, ctx):
@@ -46,7 +44,8 @@ class General(commands.Cog):
         cmd_usage = sum(v for k, v in self.bot.command_usage.items())
 
         description = [
-            self.bot.description + f", {cmd_usage:,d} commands has been executed since last boot\n",
+            self.bot.description +
+            f", {cmd_usage:,d} commands has been executed since last boot\n",
             f"[Upvote](https://top.gg/bot/{self.bot.user.id}/vote)",
             f"[Support](https://discord.gg/Kghqehz)",
             f"[Referral Link](https://billing.galaxygate.net/aff.php?aff=58)",
@@ -64,10 +63,10 @@ class General(commands.Cog):
 
         ]
         embed.add_field(name="Host", value=os, inline=False)
-        embed.add_field(name="Uptime", value=humanize.naturaltime(self.bot.uptime), inline=False)
+        embed.add_field(name="Uptime", value=humanize.naturaltime(
+            self.bot.uptime), inline=False)
         embed.add_field(name="Statistics", value="\n".join(stats))
         await ctx.send(embed=embed)
-
 
 
 def setup(bot):
