@@ -42,7 +42,7 @@ class Hmmm(commands.AutoShardedBot):
         super().__init__(
             command_prefix=get_prefix,
             case_insensitive=True,
-            description="A bot created for very very weird stuff posted on various subreddits!"  # nopep8
+            description="A bot created for very very weird stuff posted on various subreddits."  # nopep8
         )
         self.config = config
         self.owners = set(config.get("owners", {}))

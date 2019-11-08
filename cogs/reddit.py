@@ -104,7 +104,7 @@ class Reddit(commands.Cog):
                 func=Reddit._sub_handler,
                 name=row["name"],
                 aliases=row["aliases"],
-                help=f"Fetch a post from r/{row['name']}"
+                help=f"Fetch a post from the r/{row['name']} subreddit"
             )
             command.cog = self
             self.bot.add_command(command)
