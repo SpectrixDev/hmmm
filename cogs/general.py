@@ -1,10 +1,14 @@
 import logging
 import platform
-from datetime import datetime
+import os
+from datetime import datetime, timedelta
 
 import discord
 import humanize
 from discord.ext import commands
+
+import psutil
+
 
 log = logging.getLogger(__name__)
 
@@ -39,33 +43,42 @@ class General(commands.Cog):
         await ctx.send(embed=embed)
 
 
-    @commands.command()
+    @commands.command(aliases=["about"])
     async def info(self, ctx):
 
-        os = platform.platform()
-        cmd_usage = sum(v for k, v in self.bot.command_usage.items())
+        
+        usage = sum(v for k, v in self.bot.command_usage.items())
+        proc = psutil.Process(os.getpid()) 
+        
+        embed = discord.Embed(
+            title=str(self.bot.user),
+            color=discord.Color(value=0xc904e2)
+        )
 
-        description = [
-            self.bot.description + f", {cmd_usage:,d} commands has been executed since last boot\n",
+        embed.description = "\n".join([
+            self.bot.description,
+            f"{usage:,d} commands has been executed since last boot\n",
             f"[Upvote](https://top.gg/bot/{self.bot.user.id}/vote)",
             f"[Support](https://discord.gg/Kghqehz)",
             f"[Referral Link](https://billing.galaxygate.net/aff.php?aff=58)",
             f"[Repository](https://github.com/SpectrixOfficial/hmmm)"
-        ]
-        embed = discord.Embed(
-            title=str(self.bot.user),
-            description="\n".join(description),
-            color=discord.Color(value=0xc904e2)
-        )
-        stats = [
+        ])
+        
+        statistics = [
+            f"Been running since {humanize.naturaltime(self.bot.uptime)}"
             f"I'm in {len(self.bot.guilds):,d} guilds",
             f"Seeing {len(set(self.bot.get_all_channels())):,d} channels",
             f"Listening to {len(set(self.bot.get_all_members())):,d} users"
-
         ]
-        embed.add_field(name="Host", value=os, inline=False)
-        embed.add_field(name="Uptime", value=humanize.naturaltime(self.bot.uptime), inline=False)
-        embed.add_field(name="Statistics", value="\n".join(stats))
+
+        os_info = [
+            f"Running on `{platform.platform()}`",
+            f"Using {humanize.naturalsize(proc.memory_full_info().rss)} physical memory",
+            f"CPU Usage: {psutil.cpu_percent()}"
+            f"Number of CPU cores: {psutil.cpu_count()}",
+        ]
+        embed.add_field(name="OS", value="\n".join(os_info), inline=False)
+        embed.add_field(name="Statistics", value="\n".join(statistics))
         await ctx.send(embed=embed)
 
 

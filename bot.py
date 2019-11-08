@@ -22,12 +22,12 @@ except ImportError:
 if not os.path.exists("logs"):
     os.mkdir("logs")
 
-FILENAME = datetime.utcnow().strftime("logs/%Y-%m-%d_%H-%M-%S.log")
+BOOT = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
 log = logging.getLogger("cogs")
 log.setLevel(logging.DEBUG)
 
 
-l = logging.FileHandler(FILENAME, "w", "utf-8")
+l = logging.FileHandler(f"logs/{BOOT}.log", "w", "utf-8")
 s = logging.StreamHandler()
 s.setFormatter(LogFormatter())
 l.setFormatter(LogFormatter(use_ansi=False))
@@ -67,9 +67,15 @@ class Hmmm(commands.AutoShardedBot):
         log.info("Channel Count: %d", len(set(self.get_all_channels())))
         log.info("Guild Count: %d", len(self.guilds))
         log.info("Debug Mode: %s", str(self.debug_mode))
+    
+    async def on_resume(self):
+        log.info("Resumed..")
+    
+    async def on_command(self, ctx):
+        log.info(":thonking:")
 
-    async def on_connect(self):
-        log.info("BOOT @ %s", FILENAME)
+    async def login(self, *args, **kwargs):
+        log.info("BOOT @ %s", BOOT)
         log.info("Connecting to discord...")
 
         self.session = aiohttp.ClientSession(json_serialize=json.dumps)
@@ -86,8 +92,7 @@ class Hmmm(commands.AutoShardedBot):
                 self.nsfw_required.add(guild["guild_id"])
         except ConnectionRefusedError:
             log.critical("db connection refused, stopping bot")
-            await self.logout()
-            return
+            exit(-1)
 
 
         extensions = [x.as_posix().replace("/", ".").replace(".py", "") for x in pathlib.Path("cogs").iterdir() if x.is_file()]
@@ -107,6 +112,7 @@ class Hmmm(commands.AutoShardedBot):
 
             except commands.NoEntryPointError:
                 log.warning("Extension %s has no setup function", ext)
+        await super().login(*args, **kwargs)
 
     async def update(self):
         activity = discord.Activity(

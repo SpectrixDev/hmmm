@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import random
+import discord
 from discord.ext import commands
 
 from utils.errors import SubredditNotFound, UnhandledStatusCode
@@ -24,7 +25,7 @@ class SubredditHandler:
         self.posts = []
 
 
-    async def get_post(self, guild_id: int, subreddit: str):
+    async def get_post(self, guild_id: int, subreddit: str) -> Post:
         filtered = list(filter(lambda a: not guild_id in a.guild_ids and a.subreddit == subreddit, self.posts))
         log.debug(len(filtered))
         if len(filtered) == 0:
@@ -45,7 +46,13 @@ class SubredditHandler:
                         raise SubredditNotFound(subreddit, resp.status)
                     
                     for post in data["data"]["children"]:
-                        if not "url" in post["data"] or any(post["data"]["url"] == x.url for x in self.posts):
+                        if any(post["data"]["url"] == x.url for x in self.posts):
+                            post = list(filter(lambda a: a.url == data["data"]["url"], self.posts))[0]
+                            post.up = post["data"]["ups"]
+                            post.down = post["data"]["downs"]
+                            continue
+                        
+                        if not "url" in post["data"]:
                             continue
                         if not any(post["data"]["url"].endswith(x) for x in accepted_extensions):
                             continue
@@ -54,7 +61,9 @@ class SubredditHandler:
                             title=post["data"]["title"],
                             url=post["data"]["url"],
                             subreddit=subreddit,
-                            is_nsfw=post["data"]["over_18"]
+                            nsfw=post["data"]["over_18"],
+                            up=post["data"]["ups"],
+                            down=post["data"]["downs"]
                         )
                         self.posts.append(obj)
                         log.debug("%s: %r", subreddit, obj)
@@ -78,7 +87,7 @@ class SubredditHandler:
             return post
 
 
-class Reddit(commands.Cog, name="Reddit commands"):
+class Reddit(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.handler = SubredditHandler(self.bot)
@@ -106,7 +115,13 @@ class Reddit(commands.Cog, name="Reddit commands"):
             raise commands.NSFWChannelRequired(ctx.channel)
         try:
             post = await self.handler.get_post(ctx.guild.id, ctx.command.qualified_name)
-            await ctx.send("**{0.title}**\n{0.url}".format(post))
+            embed = discord.Embed(
+                title=post.title,
+                color=discord.Color(0x36393E)
+            )
+            embed.set_image(url=post.url)
+            embed.set_footer(text=f"\U00002b06 {post.up} \U00002b07 {post.down}")
+            await ctx.send(embed=embed)
         except (UnhandledStatusCode, SubredditNotFound) as error:
             await ctx.send(error)
            

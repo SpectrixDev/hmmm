@@ -2,16 +2,24 @@ from logging import Formatter, LogRecord
 
 
 class Post:
-    def __init__(self, title: str, url: str, subreddit: str, is_nsfw: bool = False):
+    def __init__(self,
+                 up: int,
+                 down: int,
+                 url: str,
+                 title: str,
+                 subreddit: str,
+                 nsfw: bool = False
+        ):
         self.title = title
         self.url = url
         self.subreddit = subreddit
-        self.nsfw = is_nsfw
+        self.nsfw = nsfw
         self.guild_ids = set()
-
+        self.up = 0
+        self.down = 0
 
     def __repr__(self):
-        return "<Post subreddit='{0.subreddit}' title='{0.title}' is_nsfw={0.nsfw} url='{0.url}'>".format(self)
+        return "<Post subreddit='{0.subreddit}' title='{0.title}' up={0.up} down={0.down} nsfw={0.nsfw} url='{0.url}'>".format(self)
 
     def __str__(self):
         return self.url
@@ -20,12 +28,8 @@ class Post:
         return self.nsfw
 
 
-
-
-
-
 class LogFormatter(Formatter):
-    def __init__(self, use_ansi: bool=True):
+    def __init__(self, use_ansi: bool = True):
         if use_ansi:
             super().__init__(
                 fmt="\033[1;30m[{asctime} {name}/{levelname}]: {message}",
@@ -46,7 +50,7 @@ class LogFormatter(Formatter):
             "ERROR": "\033[31m",
             "DEBUG": "\033[32;1m",
             "RESET": "\033[0m",
-            "INFO" : "\033[1;32m"
+            "INFO": "\033[1;32m"
         }
 
     def format(self, r: LogRecord):

@@ -2,3 +2,4 @@ discord.py==1.2.4
 jishaku==1.16.3.159
 asyncpg==0.19.0
 ujson==1.35; sys_platform != "win32"
+psutil==5.4.8
