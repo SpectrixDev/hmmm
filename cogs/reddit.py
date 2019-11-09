@@ -47,7 +47,7 @@ class SubredditHandler:
                     
                     for post in data["data"]["children"]:
                         if any(post["data"]["url"] == x.url for x in self.posts):
-                            post = list(filter(lambda a: a.url == data["data"]["url"], self.posts))[0]
+                            post = list(filter(lambda a: a.url == data["data"].get("url"), self.posts))[0]
                             post.up = post["data"]["ups"]
                             post.down = post["data"]["downs"]
                             continue
@@ -101,7 +101,7 @@ class Reddit(commands.Cog):
         ]
         for row in cmds:
             command = commands.Command(
-                func=Reddit._sub_handler,
+                func=Reddit.command,
                 name=row["name"],
                 aliases=row["aliases"],
                 help=f"Fetch a post from the r/{row['name']} subreddit"
@@ -110,8 +110,8 @@ class Reddit(commands.Cog):
             self.bot.add_command(command)
 
 
-    async def _sub_handler(self, ctx):
-        if not ctx.channel.is_nsfw() and ctx.guild.id in self.bot.nsfw_required:
+    async def command(self, ctx):
+        if not ctx.channel.is_nsfw() and ctx.guild.id in self.bot.nsfw_restricted:
             raise commands.NSFWChannelRequired(ctx.channel)
         try:
             post = await self.handler.get_post(ctx.guild.id, ctx.command.qualified_name)
@@ -120,7 +120,7 @@ class Reddit(commands.Cog):
                 color=discord.Color(0x36393E)
             )
             embed.set_image(url=post.url)
-            embed.set_footer(text=f"\U00002b06 {post.up} \U00002b07 {post.down}")
+            embed.set_footer(text=f"/\ {post.up} \\/ {post.down}")
             await ctx.send(embed=embed)
         except (UnhandledStatusCode, SubredditNotFound) as error:
             await ctx.send(error)
@@ -131,16 +131,16 @@ class Reddit(commands.Cog):
     @commands.has_permissions(manage_guild=True)
     @commands.command(
         name="toggle-nsfw", 
-        help="A command to turn on or off the requirement of reddit commands being executed in only NSFW channels"
+        help="Toggle NSFW only channels on or off for reddit commands"
     )
     async def toggle_nsfw(self, ctx):
         toggled_state = await self.bot.db.fetchval("SELECT toggle_nsfw($1);", ctx.guild.id)
         if toggled_state == 1:
             await ctx.send(":unlock: The NSFW channel requirement for reddit commands has been removed")
-            self.bot.nsfw_required.discard(ctx.guild.id)
+            self.bot.nsfw_restricted.discard(ctx.guild.id)
         else:
             await ctx.send(":lock: The NSFW channel requirement for reddit commands has been enabled")
-            self.bot.nsfw_required.add(ctx.guild.id)
+            self.bot.nsfw_restricted.add(ctx.guild.id)
             
 
 def setup(bot):

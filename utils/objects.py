@@ -15,8 +15,8 @@ class Post:
         self.subreddit = subreddit
         self.nsfw = nsfw
         self.guild_ids = set()
-        self.up = 0
-        self.down = 0
+        self.up = up
+        self.down = down
 
     def __repr__(self):
         return "<Post subreddit='{0.subreddit}' title='{0.title}' up={0.up} down={0.down} nsfw={0.nsfw} url='{0.url}'>".format(self)

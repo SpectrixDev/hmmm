@@ -1,14 +1,16 @@
-CREATE TABLE IF NOT EXISTS nsfw_opted (
-    guild_id BIGINT UNIQUE
+CREATE TABLE IF NOT EXISTS guild_settings (
+    guild_id BIGINT UNIQUE,
+    prefix VARCHAR(20) DEFAULT NULL, 
+    nsfw_restricted BOOLEAN DEFAULT true
 );
 
 CREATE OR REPLACE FUNCTION toggle_nsfw(guildid BIGINT) RETURNS integer AS $$
     BEGIN
-        IF EXISTS (SELECT guild_id FROM nsfw_opted WHERE guild_id=guildid) THEN
-            DELETE FROM nsfw_opted WHERE nsfw_opted.guild_id=guildid;
+        IF EXISTS (SELECT guild_id FROM guild_settings WHERE guild_id=guildid) THEN
+            UPDATE guild_settings SET nsfw_restricted = false WHERE guild_id=guildid;
             RETURN 1;
         ELSE
-            INSERT INTO nsfw_opted VALUES(guildid);
+            INSERT INTO guild_settings VALUES(guildid);
             RETURN 2;
                 
         END IF;

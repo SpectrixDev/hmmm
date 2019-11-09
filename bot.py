@@ -24,8 +24,6 @@ if not os.path.exists("logs"):
 
 BOOT = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
 log = logging.getLogger("cogs")
-log.setLevel(logging.DEBUG)
-
 
 l = logging.FileHandler(f"logs/{BOOT}.log", "w", "utf-8")
 s = logging.StreamHandler()
@@ -50,7 +48,12 @@ class Hmmm(commands.AutoShardedBot):
         self.debug_mode = config.get("debug_mode", True)
         self.command_usage = Counter()
         self.db = None
-        self.nsfw_required = set()
+        self.prefixes = {}
+        self.nsfw_restricted = set()
+        if self.config.get("debug_mode", True) is True:
+            log.setLevel(logging.DEBUG)
+        else:
+            log.setLevel(logging.INFO)
 
 
 
@@ -68,11 +71,8 @@ class Hmmm(commands.AutoShardedBot):
         log.info("Guild Count: %d", len(self.guilds))
         log.info("Debug Mode: %s", str(self.debug_mode))
     
-    async def on_resume(self):
+    async def on_resumed(self):
         log.info("Resumed..")
-    
-    async def on_command(self, ctx):
-        log.info(":thonking:")
 
     async def login(self, *args, **kwargs):
         log.info("BOOT @ %s", BOOT)
@@ -93,8 +93,12 @@ class Hmmm(commands.AutoShardedBot):
                     return await self.logout()
                     
             
-            for guild in await self.db.fetch("SELECT * FROM nsfw_opted"):
-                self.nsfw_required.add(guild["guild_id"])
+            for guild in await self.db.fetch("SELECT * FROM guild_settings"):
+                if guild.get("prefix"):
+                    self.prefixes.update({guild["guild_id"] : guild["prefix"] })
+                if guild.get("nsfw_restricted"):
+                    self.nsfw_restricted.add(guild["guild_id"])
+
         except ConnectionRefusedError:
             log.critical("db connection refused, stopping bot")
             return await self.logout()
