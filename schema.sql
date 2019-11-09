@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS guild_settings (
     guild_id BIGINT UNIQUE,
     prefix TEXT DEFAULT NULL, 
-    nsfw_restricted BOOLEAN DEFAULT true
+    nsfw_restricted BOOLEAN DEFAULT FALSE
 );
 
 CREATE OR REPLACE FUNCTION toggle_nsfw(guildid BIGINT) RETURNS integer AS $$

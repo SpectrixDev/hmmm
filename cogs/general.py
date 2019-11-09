@@ -118,7 +118,7 @@ class General(commands.Cog):
         """
         if new_prefix is None:
             await self.bot.db.execute(query, ctx.guild.id, None)
-            self.prefixes.pop(ctx.guild.id)
+            self.bot.prefixes.pop(ctx.guild.id)
             return await ctx.send("Prefix has been resetted")
 
         if len(new_prefix) > 15:

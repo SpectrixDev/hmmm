@@ -1,9 +1,9 @@
 GUILD_MESSAGE = """
 COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id}   NAME: {ctx.author}
-CHANNEL:    ID: {ctx.channel.id}   NAME: {ctx.channel}
+CHANNEL:    ID: {ctx.channel.id}   NAME: #{ctx.channel}
 GUILD:      ID: {ctx.guild.id}   NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count}
-INVOCATION: {ctx.message.content}
+INVOCATION: {ctx.message.content.clean_content}
 ERROR:
 {error}
 """
@@ -28,7 +28,7 @@ GUILD_COMMAND_MESSAGE = """
 COMMAND:    {ctx.command}
 AUTHOR:     ID: {ctx.author.id}  NAME: {ctx.author}
 CHANNEL:    ID: {ctx.channel.id}  NAME: #{ctx.channel}
-GUILD:      ID: {ctx.guild.id}  NAME: {ctx.guild}    MEMBER_COUNT: {ctx.guild.member_count}
+GUILD:      ID: {ctx.guild.id}  NAME: {ctx.guild}  MEMBER_COUNT: {ctx.guild.member_count}
 INVOCATION: {ctx.message.clean_content}
 """
 

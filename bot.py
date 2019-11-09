@@ -58,7 +58,7 @@ class Hmmm(commands.AutoShardedBot):
         self.db = None
         self.prefixes = {}
         self.nsfw_restricted = set()
-        if self.config.get("debug_mode") is True:
+        if self.debug_mode is True:
             log.setLevel(logging.DEBUG)
         else:
             if not LOG_FOLDER.exists():
@@ -112,6 +112,9 @@ class Hmmm(commands.AutoShardedBot):
                     self.prefixes.update({guild["guild_id"] : guild["prefix"] })
                 if guild.get("nsfw_restricted"):
                     self.nsfw_restricted.add(guild["guild_id"])
+                if self.debug_mode:
+                    arguments = (guild["guild_id"], guild["prefix"], guild["nsfw_restricted"])
+                    log.debug("Guild ID %d contents: PREFIX: %s NSFW_RESTRICTED: %s", *arguments)
 
         except ConnectionRefusedError:
             log.critical("Database connection refused, stopping bot")
@@ -157,15 +160,16 @@ class Hmmm(commands.AutoShardedBot):
                     log.info("Recieved %s %s %d", resp.method, resp._url, resp.status)
 
 
-    async def logout(self):
-        log.debug("logout() got called, logging out and cleaning up tasks")
+    async def close(self):
+        log.debug("close() got called, cleaning up tasks")
         try:
             await self.session.close()
-            if self.db:
-                await self.db.close()
+            await self.db.close()
         except (RuntimeError, AttributeError):
             pass
-        return await super().logout()
+            
+        await super().close()
+    
 
 
 
