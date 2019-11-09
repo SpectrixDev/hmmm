@@ -97,6 +97,8 @@ class General(commands.Cog):
         ]
         if self.bot.prefixes.get(ctx.guild.id):
             embed.description.append(f'2) {self.bot.prefixes[ctx.guild.id]}')
+        else:
+            embed.description.append(f'2) {self.bot.config.get("prefix")}')
         
         embed.description = "\n".join(embed.description)
         
