@@ -83,10 +83,30 @@ class General(commands.Cog):
         embed.add_field(name="Counts", value="\n".join(counts))
         await ctx.send(embed=embed)
 
-    @commands.command(name="prefix")
+    @commands.group(name="prefix", invoke_without_command=True)
     @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
-    async def change_prefix(self, ctx, new_prefix: commands.clean_content=None):
+    async def prefix(self, ctx):
+        embed = discord.Embed(
+            title=ctx.guild.name,
+            color=discord.Color(0x36393E),
+            
+        )
+        
+        embed.description = [
+            f'1) {self.bot.user.mention}',
+        ]
+        if self.bot.prefixes.get(ctx.guild.id):
+            embed.description.append(f'2) {self.bot.prefixes[ctx.guild.id]}')
+        
+        embed.description = "\n".join(embed.description)
+        
+        return await ctx.send(embed=embed)
+        
+    
+    @prefix.command(name="set")
+    @commands.has_permissions(manage_guild=True)                
+    async def set_prefix(self, ctx, new_prefix: commands.clean_content = None):
+
         query = """
         INSERT INTO guild_settings (guild_id, prefix)
         VALUES ($1,$2)
@@ -94,28 +114,20 @@ class General(commands.Cog):
         DO UPDATE
         SET prefix=$2
         """
-        if self.bot.prefixes.get(ctx.guild.id) and new_prefix is None:
-            embed = discord.Embed(
-                title=ctx.guild.name,
-                color=discord.Color(0x36393E),
-                description="\n".join([
-                    f'1) {self.bot.user.mention}',
-                    f'2) {self.bot.prefixes.get(ctx.guild.id)}'
-                ])
-            )
-            return await ctx.send(embed=embed)
-        else:
-            if new_prefix is not None and len(new_prefix) > 15:
-                return await ctx.send('Prefix length cannot be longer then 10 characters')
+        if new_prefix is None:
+            await self.bot.db.execute(query, ctx.guild.id, None)
+            self.prefixes.pop(ctx.guild.id)
+            return await ctx.send("Prefix has been resetted")
 
-            await self.bot.db.execute(query, ctx.guild.id, new_prefix)
-            if self.bot.prefixes.get(ctx.guild.id):
-                await ctx.send(f'Successfully changed previous prefix `{self.bot.prefixes[ctx.guild.id]}` to `{new_prefix}`')
-            else:
-                await ctx.send(f'Changed prefix to `{new_prefix}`')
-                
-            self.bot.prefixes[ctx.guild.id] = new_prefix
-                
+        if len(new_prefix) > 15:
+            return await ctx.send('Prefix length cannot be longer then 10 characters')
+
+        await self.bot.db.execute(query, ctx.guild.id, new_prefix)
+        if self.bot.prefixes.get(ctx.guild.id):
+            await ctx.send(f'Successfully changed previous prefix `{self.bot.prefixes[ctx.guild.id]}` to `{new_prefix}`')
+        else:
+            await ctx.send(f'Changed prefix to `{new_prefix}`')
+        self.bot.prefixes[ctx.guild.id] = new_prefix
 
 
 def setup(bot):
