@@ -53,7 +53,7 @@ class General(commands.Cog):
     async def info(self, ctx):
 
         usage = sum(v for k, v in self.bot.command_usage.items())
-        proc = psutil.Process(os.getpid())
+        proc = psutil.Process()
 
         embed = discord.Embed(
             title=str(self.bot.user),
