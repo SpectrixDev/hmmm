@@ -15,9 +15,6 @@ Python related deps can be found in the `requirements.txt` file.
 - 1: Rename the `config.json.example` file to `config.json` and configure it to your likings
 - 2: Start the bot, if shit goes down that's unhandled please submit an issue or join the [support server](https://discord.gg/Kghqehz)
 
-
-
-
 ## NOTICE:
 
 Viewer discretion is advised, as the bot fetches images from reddit and the bot description on the bot list you added hmmm from tells you that the bot posts weird and disturbing content. When you invite hmmm, you agree to the terms and you are aware of the content that the bot posts.
