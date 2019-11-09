@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS guild_settings (
     guild_id BIGINT UNIQUE,
-    prefix VARCHAR(20) DEFAULT NULL, 
+    prefix VARCHAR(15) DEFAULT NULL, 
     nsfw_restricted BOOLEAN DEFAULT true
 );
 

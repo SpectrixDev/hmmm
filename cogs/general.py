@@ -8,6 +8,7 @@ import humanize
 from discord.ext import commands
 
 import psutil
+import asyncpg
 
 
 log = logging.getLogger(__name__)
@@ -46,49 +47,75 @@ class General(commands.Cog):
         embed.description = f"[Click here]({url}) to invite {self.bot.user.name} to your guild!"
         await ctx.send(embed=embed)
 
-    @commands.command(
-        aliases=["about"],
-        help="Get some information about the bot and its environment"
-    )
+    @commands.command(aliases=["about"], help='Get some information about the bot and its environment')
     async def info(self, ctx):
 
-        usage = sum(v for k, v in self.bot.command_usage.items())
+        embed = discord.Embed(title=str(self.bot.user), color=discord.Color(value=0xc904e2))
         proc = psutil.Process()
-
-        embed = discord.Embed(
-            title=str(self.bot.user),
-            color=discord.Color(value=0xc904e2)
-        )
+        usage = sum(v for k, v in self.bot.command_usage.items())
 
         embed.description = "\n".join([
             self.bot.description,
-            f"{usage:,d} commands has been executed since last boot\n",
-            f"[Upvote](https://top.gg/bot/{self.bot.user.id}/vote)",
-            f"[Support](https://discord.gg/Kghqehz)",
-            f"[Repository](https://github.com/SpectrixOfficial/hmmm)",
-            f"[VPS Referral Link](https://billing.galaxygate.net/aff.php?aff=58)"
+            f'{usage:,d} commands has been executed since last boot\n',
+            f'[Upvote](https://top.gg/bot/{self.bot.user.id}/vote)',
+            f'[Support](https://discord.gg/Kghqehz)',
+            f'[Repository](https://github.com/SpectrixOfficial/hmmm)',
+            f'[VPS Referral Link](https://billing.galaxygate.net/aff.php?aff=58)'
         ])
 
-        counts = [
+        counts = (
             f"I'm in {len(self.bot.guilds):,d} guilds",
-            f"Seeing {len(set(self.bot.get_all_channels())):,d} channels",
-            f"Listening to {len(set(self.bot.get_all_members())):,d} users"
-        ]
-
-        os_info = [
-            f"OS: `{platform.platform()}`",
-            f"CPU Usage: {psutil.cpu_percent()}%",
-            f"CPU Cores: {psutil.cpu_count()}",
-        ]
-        stats = [
-            f"Been running since {humanize.naturaltime(self.bot.uptime)}",
-            f"Using {humanize.naturalsize(proc.memory_full_info().rss)} physical memory",
-            f"Using discord.py {discord.__version__} and Python {platform.python_version()}",
-        ]
+            f'Seeing {len(set(self.bot.get_all_channels())):,d} channels',
+            f'Listening to {len(set(self.bot.get_all_members())):,d} users'
+        )
+        os_info = (
+            f'OS: `{platform.platform()}`',
+            f'CPU Usage: {psutil.cpu_percent()}%',
+            f'CPU Cores: {psutil.cpu_count()}',
+        )
+        stats = (
+            f'Been running since {humanize.naturaltime(self.bot.uptime)}',
+            f'Using {humanize.naturalsize(proc.memory_full_info().rss)} physical memory',
+            f'Using discord.py {discord.__version__} and Python {platform.python_version()}',
+        )
         embed.add_field(name="Runtime", value="\n".join(stats), inline=False)
         embed.add_field(name="Host", value="\n".join(os_info))
         embed.add_field(name="Counts", value="\n".join(counts))
         await ctx.send(embed=embed)
+
+    @commands.command(name="prefix")
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    async def change_prefix(self, ctx, new_prefix: commands.clean_content=None):
+        query = """
+        INSERT INTO guild_settings (guild_id, prefix)
+        VALUES ($1,$2)
+        ON CONFLICT (guild_id)
+        DO UPDATE
+        SET prefix=$2
+        """
+        if self.bot.prefixes.get(ctx.guild.id) and new_prefix is None:
+            embed = discord.Embed(
+                title=ctx.guild.name,
+                color=discord.Color(0x36393E),
+                description="\n".join([
+                    f'1) {self.bot.user.mention}',
+                    f'2) {self.bot.prefixes.get(ctx.guild.id)}'
+                ])
+            )
+            return await ctx.send(embed=embed)
+        else:
+            if new_prefix is not None and len(new_prefix) > 15:
+                return await ctx.send('Prefix length cannot be longer then 10 characters')
+
+            await self.bot.db.execute(query, ctx.guild.id, new_prefix)
+            if self.bot.prefixes.get(ctx.guild.id):
+                await ctx.send(f'Successfully changed previous prefix `{self.bot.prefixes[ctx.guild.id]}` to `{new_prefix}`')
+            else:
+                await ctx.send(f'Changed prefix to `{new_prefix}`')
+                
+            self.bot.prefixes[ctx.guild.id] = new_prefix
+                
 
 
 def setup(bot):

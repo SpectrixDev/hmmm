@@ -32,8 +32,17 @@ l.setFormatter(LogFormatter(use_ansi=False))
 log.handlers = [l, s]
 
 
-def get_prefix(bot, _message):
-    return [f"<@{bot.user.id}> ", bot.config.get("prefix")]
+def get_prefix(bot, message):
+    prefixes = [f"<@{bot.user.id}> "]
+    if not message.guild:
+        prefixes.append(bot.config.get("prefix"))
+    else:
+        if bot.prefixes.get(message.guild.id):
+            prefixes.append(bot.prefixes[message.guild.id])
+        else:
+            prefixes.append(bot.config.get("prefix"))
+        
+    return prefixes
 
 class Hmmm(commands.AutoShardedBot):
     def __init__(self, config: dict):
@@ -100,7 +109,7 @@ class Hmmm(commands.AutoShardedBot):
                     self.nsfw_restricted.add(guild["guild_id"])
 
         except ConnectionRefusedError:
-            log.critical("db connection refused, stopping bot")
+            log.critical("Database connection refused, stopping bot")
             return await self.logout()
 
 
