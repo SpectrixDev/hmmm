@@ -77,13 +77,16 @@ class Hmmm(commands.AutoShardedBot):
 
     async def on_ready(self):
         await self.update()
+        log.info("--" * 15)
         log.info("%s is ready", self.user)
-        log.info("ID: %d", self.user.id)
-        log.info("Created At:  %s", self.user.created_at)
-        log.info("User Count: %d", len(set(self.get_all_members())))
-        log.info("Channel Count: %d", len(set(self.get_all_channels())))
-        log.info("Guild Count: %d", len(self.guilds))
-        log.info("Debug Mode: %s", str(self.debug_mode))
+        log.info(" ")
+        log.info("ID:            %d", self.user.id)
+        log.info("Created_At:    %s", self.user.created_at)
+        log.info("User Count:    %d", len(set(self.get_all_members())))
+        log.info("Channels:      %d", len(set(self.get_all_channels())))
+        log.info("Guilds:        %d", len(self.guilds))
+        log.info("Debug:         %s", str(self.debug_mode))
+        log.info("--" * 15)
     
     async def on_resumed(self):
         log.info("Resumed..")
