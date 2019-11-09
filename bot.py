@@ -85,14 +85,19 @@ class Hmmm(commands.AutoShardedBot):
         try:
             self.db = await asyncpg.create_pool(**self.config["database"])
             with open("schema.sql") as f:
-                await self.db.execute(f.read())
-                log.info("Executed SQL scheme")
+                try:
+                    await self.db.execute(f.read())
+                    log.info("Executed SQL schema")
+                except asyncpg.SyntaxOrAccessError:
+                    log.error("INVALID SQL SYNTAX ", exc_info=True)
+                    return await self.logout()
+                    
             
             for guild in await self.db.fetch("SELECT * FROM nsfw_opted"):
                 self.nsfw_required.add(guild["guild_id"])
         except ConnectionRefusedError:
             log.critical("db connection refused, stopping bot")
-            exit(-1)
+            return await self.logout()
 
 
         extensions = [x.as_posix().replace("/", ".").replace(".py", "") for x in pathlib.Path("cogs").iterdir() if x.is_file()]
