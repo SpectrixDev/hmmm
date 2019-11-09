@@ -116,7 +116,7 @@ class Reddit(commands.Cog):
         try:
             post = await self.handler.get_post(ctx.guild.id, ctx.command.qualified_name)
             embed = discord.Embed(
-                title=post.title,
+                title=discord.utils.escape_markdown(post.title),
                 color=discord.Color(0x36393E)
             )
             embed.set_image(url=post.url)
