@@ -18,18 +18,17 @@ except ImportError:
 
 
 
-
-if not os.path.exists("logs"):
-    os.mkdir("logs")
-
 BOOT = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
+LOG_FOLDER = pathlib.Path("logs")
+
+
+
 log = logging.getLogger("cogs")
 
-l = logging.FileHandler(f"logs/{BOOT}.log", "w", "utf-8")
-s = logging.StreamHandler()
-s.setFormatter(LogFormatter())
-l.setFormatter(LogFormatter(use_ansi=False))
-log.handlers = [l, s]
+
+handler = logging.StreamHandler()
+handler.setFormatter(LogFormatter())
+log.addHandler(handler)
 
 
 def get_prefix(bot, message):
@@ -59,10 +58,16 @@ class Hmmm(commands.AutoShardedBot):
         self.db = None
         self.prefixes = {}
         self.nsfw_restricted = set()
-        if self.config.get("debug_mode", True) is True:
+        if self.config.get("debug_mode") is True:
             log.setLevel(logging.DEBUG)
         else:
+            if not LOG_FOLDER.exists():
+                LOG_FOLDER.mkdir() 
+            
+            file_handler = logging.FileHandler(f"logs/{BOOT}.log", "w", "utf-8")
+            file_handler.setFormatter(LogFormatter(False))
             log.setLevel(logging.INFO)
+            log.addFilter(file_handler)
 
 
 

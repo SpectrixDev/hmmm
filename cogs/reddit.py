@@ -134,8 +134,8 @@ class Reddit(commands.Cog):
         help="Toggle NSFW only channels on or off for reddit commands"
     )
     async def toggle_nsfw(self, ctx):
-        toggled_state = await self.bot.db.fetchval("SELECT toggle_nsfw($1);", ctx.guild.id)
-        if toggled_state == 1:
+        return_type = await self.bot.db.fetchval("SELECT toggle_nsfw($1);", ctx.guild.id)
+        if return_type == 1:
             await ctx.send(":unlock: The NSFW channel requirement for reddit commands has been removed")
             self.bot.nsfw_restricted.discard(ctx.guild.id)
         else:
