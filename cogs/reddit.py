@@ -97,7 +97,7 @@ class Reddit(commands.Cog):
             {"name" : "cursedimages", "aliases" : ["cursedimage", "cursed"]},
             {"name" : "ooer", "aliases" : []},
             {"name" : "surrealmeme", "aliases" : ["surreal", "surrealmemes"]},
-            {"name" : "imsorry", "aliases" : ["imsorryjon", "imsorryjohn"]}
+            {"name" : "imsorryjon", "aliases" : ["imsorryjohn", "imsorry", "jon"]}
         ]
         for row in cmds:
             command = commands.Command(
