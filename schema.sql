@@ -7,10 +7,14 @@ CREATE TABLE IF NOT EXISTS guild_settings (
 CREATE OR REPLACE FUNCTION toggle_nsfw(guildid BIGINT) RETURNS integer AS $$
     BEGIN
         IF (SELECT nsfw_restricted FROM guild_settings WHERE guild_id=guildid) = TRUE THEN
-            UPDATE guild_settings SET nsfw_restricted = false WHERE guild_id=guildid;
+            UPDATE guild_settings SET nsfw_restricted = FALSE WHERE guild_id=guildid;
             RETURN 1;
         ELSE
-            INSERT INTO guild_settings VALUES(guildid);
+            INSERT INTO guild_settings 
+            VALUES(guildid) 
+            ON CONFLICT (guild_id)
+            DO UPDATE 
+            SET nsfw_restricted = TRUE;
             RETURN 2;
                 
         END IF;
