@@ -119,7 +119,7 @@ class General(commands.Cog):
         if new_prefix is None:
             await self.bot.db.execute(query, ctx.guild.id, None)
             self.bot.prefixes.pop(ctx.guild.id)
-            return await ctx.send("Prefix has been resetted")
+            return await ctx.send("Prefix has been reset to default.")
 
         if len(new_prefix) > 15:
             return await ctx.send('Prefix length cannot be longer then 10 characters')
