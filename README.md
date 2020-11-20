@@ -1,11 +1,10 @@
 # hmmm
-hmmm is a discord bot that has over 1.1k guilds that posts strange things from sources like reddit, it is
-licensed under the [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html) license. Development work is done in the `develop` branch. If you have any questions go to the [support server](https://discord.gg/Kghqehz).
+hmmm is a discord bot that has over 1.1k guilds that posts strange things from sources like reddit. Development work is done in the `develop` branch. If you have any questions go to the [support server](https://discord.gg/Kghqehz).
 
 
 # Running a clone
 
-I do and will not support you on running a clone but i'll make a short list of required dependencies
+## Dependencies:
 
 - PostgreSQL 10+
 - Python 3.6+
@@ -13,7 +12,7 @@ I do and will not support you on running a clone but i'll make a short list of r
 Python related deps can be found in the `requirements.txt` file. 
 
 - 1: Rename the `config.json.example` file to `config.json` and configure it to your likings
-- 2: Start the bot, if shit goes down that's unhandled please submit an issue or join the [support server](https://discord.gg/Kghqehz)
+- 2: Start the bot lol.
 
 ## NOTICE:
 
